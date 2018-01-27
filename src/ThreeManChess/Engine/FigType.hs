@@ -2,7 +2,10 @@
 module ThreeManChess.Engine.FigType where
 
 import Data.Data
-import Data.Set (Set)
+-- import Data.Set as Set
 
 data FigType = Pawn | Rook | Knight | Bishop | King | Queen deriving (Eq, Show, Data, Typeable)
-figTypeSet = Set.fromList (Pawn, Rook, Knight, Bishop, King, Queen)
+-- figTypeSet :: Set.Set FigType
+-- figTypeSet = Set.fromList [Pawn, Rook, Knight, Bishop, King, Queen]
+figTypes :: [FigType]
+figTypes = [Pawn,Rook,Knight,Bishop,King,Queen]
