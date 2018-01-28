@@ -129,4 +129,11 @@ add UnitDiagonalMove {direction=(DiagonalDirection Inwards p), count=Once}
               File{color=prev c,
                    colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf, quarterHalf=r}}
               }
+filewiseInc :: FilewiseDirection -> File -> File
+filewiseInc Pluswards = plus
+filewiseInc Minuswards = minus
+add UnitDiagonalMove {direction=(DiagonalDirection Inwards p), count=Once} (Pos rank file) =
+  Just Pos {rank=inw rank, file=filewiseInc p file}
+add UnitDiagonalMove {direction=(DiagonalDirection Outwards p), count=Once} (Pos rank file) =
+  do { o <- out rank; return Pos {rank=o, file=filewiseInc p file}}
 add LinearMove m p = foldl add p $ unitsInvolRank m

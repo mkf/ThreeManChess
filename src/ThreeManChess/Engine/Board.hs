@@ -6,7 +6,8 @@ import ThreeManChess.Engine.Pos
 type Board a = Pos -> Maybe a
 
 put :: Board a -> Pos -> Maybe a -> Board a
-put before where_to what x = if x==where_to then what else before x
+put before x what y | x==y = what
+put before _ what x = before x
 
 swap :: Board a -> Pos -> Pos -> Board a
 swap before to from x = case x of to -> before from

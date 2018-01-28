@@ -3,12 +3,22 @@ module ThreeManChess.Engine.Figure where
 
 import Data.Data
 import ThreeManChess.Engine.Color
-import ThreeManChess.Engine.FigType
+import ThreeManChess.Engine.FigType as FigType
 import ThreeManChess.Engine.Piece
 
-data Figure = Pawn {figType :: FigType.Pawn, color :: Color.Color, crossedCenter :: Boolean} |
-              Rook {figType :: FigType.Rook, color :: Color.Color} |
-              Knight {figType :: FigType.Knight, color :: Color.Color} |
-              Bishop {figType :: FigType.Bishop, color :: Color.Color} |
-              King {figType :: FigType.King, color :: Color.Color} |
-              Queen {figType :: FigType.Queen, color :: Color.Color} deriving (Piece, Eq, Show, Data, Typeable)
+data Figure = Pawn {color :: Color, crossedCenter :: Bool} |
+              Rook {color :: Color} |
+              Knight {color :: Color} |
+              Bishop {color :: Color} |
+              King {color :: Color} |
+              Queen {color :: Color} deriving (--Piece,
+  Eq, Show,-- Data,
+  Typeable--, FigType
+  )
+figType :: Figure -> FigType.FigType
+figType (ThreeManChess.Engine.Figure.Pawn _ _) = FigType.Pawn
+figType (ThreeManChess.Engine.Figure.Rook _) = FigType.Pawn
+figType (ThreeManChess.Engine.Figure.Knight _) = FigType.Knight
+figType (ThreeManChess.Engine.Figure.Bishop _) = FigType.Bishop
+figType (ThreeManChess.Engine.Figure.King _) = FigType.King
+figType (ThreeManChess.Engine.Figure.Queen _) = FigType.Queen
