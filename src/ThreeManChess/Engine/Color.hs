@@ -3,6 +3,14 @@ module ThreeManChess.Engine.Color where
 data Color = White | Gray | Black deriving (Eq, Ord, Read, Show)
 -- colorSet :: Set.Set Color
 -- colorSet = Set.fromList White Gray Black
+next :: Color -> Color
+next White = Gray
+next Gray = Black
+next Black = White
+prev :: Color -> Color
+prev Black = Gray
+prev Gray = White
+prev White = Black
 colors :: [Color]
 colors = [White, Gray, Black]
 colorSegm :: Int -> Color

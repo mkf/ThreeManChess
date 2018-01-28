@@ -10,11 +10,75 @@ type ColorSegment = Color
 data SegmentHalf = FirstHalf | SecondHalf deriving (Eq, Ord, Read, Show)
 data SegmentQuarter = SegmentQuarter { half :: SegmentHalf , halfQuarter :: SegmentHalf }
   deriving (Eq, Ord, Read, Show)
-data SegmentFile = SegmentFile { segmentQuarter :: SegmentQuarter , quarterFile :: SegmentHalf }
+data SegmentEight = SegmentEight { segmentQuarter :: SegmentQuarter , quarterHalf :: SegmentHalf }
   deriving (Eq, Ord, Read, Show)
-data File = File { color :: ColorSegment , segmentFile :: SegmentFile }
+data File = File { color :: ColorSegment , colorSegmFile :: SegmentEight }
   deriving (Eq, Ord, Read, Show)
-
+opposite :: File -> File
+opposite (File c (SegmentEight (SegmentQuarter h q) f)) =
+  File {color= case h of FirstHalf -> next
+                         SecondHalf -> prev
+               $ c,
+        colorSegmFile=SegmentEight {
+           segmentQuarter = SegmentQuarter { half=otherSegmHalf h, halfQuarter=q },
+           quarterHalf = f }}
+minus :: File -> File
+minus File { color=c, colorSegmFile= SegmentEight {segmentQuarter= (SegmentQuarter FirstHalf FirstHalf),
+                                                 quarterHalf = FirstHalf}} =
+  File {color=prev c,
+        colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter SecondHalf SecondHalf,
+                                     quarterHalf = SecondHalf}}
+minus File { color=c, colorSegmFile=f} =
+  case f of
+    SegmentEight {segmentQuarter= (SegmentQuarter FirstHalf FirstHalf),
+                  quarterHalf = FirstHalf} ->
+      File {color=prev c,
+            colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter SecondHalf SecondHalf,
+                                         quarterHalf = SecondHalf}}
+    _ ->
+      File {color=c, colorSegmFile=
+                     case f of
+                       SegmentEight{segmentQuarter=q,quarterHalf=SecondHalf} ->
+                         SegmentEight{segmentQuarter=q, quarterHalf=FirstHalf}
+                       SegmentEight{segmentQuarter=SegmentQuarter h SecondHalf} ->
+                         SegmentEight{segmentQuarter=SegmentQuarter h FirstHalf, quarterHalf=SecondHalf}
+                       SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf} ->
+                         SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=SecondHalf}
+                       _ -> error "case did not work"
+}
+plus :: File -> File
+plus File { color=c, colorSegmFile=f} =
+  case f of
+    SegmentEight {segmentQuarter= (SegmentQuarter SecondHalf SecondHalf),
+                  quarterHalf = SecondHalf} ->
+      File {color=next c,
+            colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter FirstHalf FirstHalf,
+                                         quarterHalf = FirstHalf}}
+    _ ->
+      File {color=c, colorSegmFile=
+                     case f of
+                       SegmentEight{segmentQuarter=q,quarterHalf=FirstHalf} ->
+                         SegmentEight{segmentQuarter=q, quarterHalf=SecondHalf}
+                       SegmentEight{segmentQuarter=SegmentQuarter h FirstHalf} ->
+                         SegmentEight{segmentQuarter=SegmentQuarter h SecondHalf, quarterHalf=SecondHalf}
+                       SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf} ->
+                         SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=FirstHalf}
+                       _ -> error "case did not work"
+}
+inw :: Rank -> Rank
+inw MostOuter = SecondOuter
+inw SecondOuter = MiddleOuter
+inw MiddleOuter = MiddleInner
+inw MiddleInner = SecondInner
+inw SecondInner = MostInner
+inw MostInner = MostInner
+out :: Rank -> Maybe Rank
+out MostInner = Just SecondInner
+out SecondInner = Just MiddleInner
+out MiddleInner = Just MiddleOuter
+out MiddleOuter = Just SecondOuter
+out SecondOuter = Just MostOuter
+out MostOuter = Nothing
 rankFromInt :: Int -> Rank
 rankFromInt 0 = MostOuter
 rankFromInt 1 = SecondOuter
@@ -32,14 +96,14 @@ intRank SecondInner = 4
 intRank MostInner = 5
 fileFromInt :: Int -> File
 fileFromInt x = if x>=0 && x<24 then File {color = colorSegm $ div x 8,
-                                           segmentFile = colorSegmFileFromInt $ mod x 8} else undefined
+                                           colorSegmFile = segmEightFromInt $ mod x 8} else undefined
 intFile :: File -> Int
-intFile (File c s) = 8 * intColorSegm c + intColorSegmFile s
-colorSegmFileFromInt :: Int -> SegmentFile
-colorSegmFileFromInt x = if x>=0 && x<8 then SegmentFile { segmentQuarter = segmQuarterFromInt $ div x 2,
-                                                           quarterFile = segmHalfFromInt $ mod x 2 } else undefined
-intColorSegmFile :: SegmentFile -> Int
-intColorSegmFile (SegmentFile q f) = 2 * intSegmQuarter q + intSegmHalf f
+intFile (File c s) = 8 * intColorSegm c + intColorSegmEight s
+segmEightFromInt :: Int -> SegmentEight
+segmEightFromInt x = if x>=0 && x<8 then SegmentEight { segmentQuarter = segmQuarterFromInt $ div x 2,
+                                                             quarterHalf = segmHalfFromInt $ mod x 2 } else undefined
+intColorSegmEight :: SegmentEight -> Int
+intColorSegmEight (SegmentEight q f) = 2 * intSegmQuarter q + intSegmHalf f
 segmQuarterFromInt :: Int -> SegmentQuarter
 segmQuarterFromInt x = if x>=0 && x<4 then SegmentQuarter { half = segmHalfFromInt $ div x 2,
                                                             halfQuarter = segmHalfFromInt $ mod x 2 } else undefined
@@ -52,5 +116,8 @@ segmHalfFromInt _ = undefined
 intSegmHalf :: SegmentHalf -> Int
 intSegmHalf FirstHalf = 0
 intSegmHalf SecondHalf = 1
+otherSegmHalf :: SegmentHalf -> SegmentHalf
+otherSegmHalf FirstHalf = SecondHalf
+otherSegmHalf SecondHalf = FirstHalf
 
 data Pos = Pos { rank :: Rank, file :: File }
