@@ -1,0 +1,29 @@
+name:                ThreeManChess
+version:             0.0.1.1
+github:              "ArchieT/ThreeManChess"
+author:              "Michał Krzysztof Feiler"
+maintainer:          "archiet@mat.umk.pl"
+copyright:           "2018 ArchieT"
+
+description:         Please see the README on Github at <https://github.com/ArchieT/ThreeManChess#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+tests:
+  ThreeManChess-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - ThreeManChess
+    - test-framework
+    - test-framework-hunit
+    - HUnit
+    - containers == 0.5.*
