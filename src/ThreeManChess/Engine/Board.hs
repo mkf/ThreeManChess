@@ -1,18 +1,18 @@
 module ThreeManChess.Engine.Board where
 
-import Data.Data
 import ThreeManChess.Engine.Pos
 
 type Board a = Pos -> Maybe a
 
 put :: Board a -> Pos -> Maybe a -> Board a
-put before x what y | x==y = what
-put before _ what x = before x
+put _ x what y | x==y = what
+put before _ _ x = before x
 
 swap :: Board a -> Pos -> Pos -> Board a
-swap before to from x = case x of to -> before from
-                                  from -> before to
+swap before to from x | x==to = before from
+                      | x==from = before to
+                      | otherwise = before x
 empty :: Board a
-empty x = Nothing
+empty _ = Nothing
 -- starting :: Board a
--- starting (Pos 1 f) = 
+-- starting (Pos 1 f) =

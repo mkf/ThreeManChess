@@ -16,33 +16,33 @@ data SegmentEight = SegmentEight { segmentQuarter :: SegmentQuarter , quarterHal
   deriving (Ord, Read, Show)
 instance Eq SegmentEight where
   x == y = segmentQuarter x == segmentQuarter y && quarterHalf x == quarterHalf y
-data File = File { color :: ColorSegment , colorSegmFile :: SegmentEight }
+data File = File { segmColor :: ColorSegment , colorSegmFile :: SegmentEight }
   deriving (Ord, Read, Show)
 instance Eq File where
-  x == y = color x == color y && colorSegmFile x == colorSegmFile y
+  x == y = segmColor x == segmColor y && colorSegmFile x == colorSegmFile y
 opposite :: File -> File
 opposite (File c (SegmentEight (SegmentQuarter h q) f)) =
-  File {color= case h of FirstHalf -> next
-                         SecondHalf -> prev
+  File {segmColor= case h of FirstHalf -> next
+                             SecondHalf -> prev
                $ c,
         colorSegmFile=SegmentEight {
            segmentQuarter = SegmentQuarter { half=otherSegmHalf h, halfQuarter=q },
            quarterHalf = f }}
 minus :: File -> File
-minus File { color=c, colorSegmFile= SegmentEight {segmentQuarter= (SegmentQuarter FirstHalf FirstHalf),
+minus File { segmColor=c, colorSegmFile= SegmentEight {segmentQuarter= (SegmentQuarter FirstHalf FirstHalf),
                                                  quarterHalf = FirstHalf}} =
-  File {color=prev c,
+  File {segmColor=prev c,
         colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter SecondHalf SecondHalf,
                                      quarterHalf = SecondHalf}}
-minus File { color=c, colorSegmFile=f} =
+minus File { segmColor=c, colorSegmFile=f} =
   case f of
     SegmentEight {segmentQuarter= (SegmentQuarter FirstHalf FirstHalf),
                   quarterHalf = FirstHalf} ->
-      File {color=prev c,
+      File {segmColor=prev c,
             colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter SecondHalf SecondHalf,
                                          quarterHalf = SecondHalf}}
     _ ->
-      File {color=c, colorSegmFile=
+      File {segmColor=c, colorSegmFile=
                      case f of
                        SegmentEight{segmentQuarter=q,quarterHalf=SecondHalf} ->
                          SegmentEight{segmentQuarter=q, quarterHalf=FirstHalf}
@@ -53,15 +53,15 @@ minus File { color=c, colorSegmFile=f} =
                        _ -> error "case did not work"
 }
 plus :: File -> File
-plus File { color=c, colorSegmFile=f} =
+plus File { segmColor=c, colorSegmFile=f} =
   case f of
     SegmentEight {segmentQuarter= (SegmentQuarter SecondHalf SecondHalf),
                   quarterHalf = SecondHalf} ->
-      File {color=next c,
+      File {segmColor=next c,
             colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter FirstHalf FirstHalf,
                                          quarterHalf = FirstHalf}}
     _ ->
-      File {color=c, colorSegmFile=
+      File {segmColor=c, colorSegmFile=
                      case f of
                        SegmentEight{segmentQuarter=q,quarterHalf=FirstHalf} ->
                          SegmentEight{segmentQuarter=q, quarterHalf=SecondHalf}
@@ -101,7 +101,7 @@ intRank MiddleInner = 3
 intRank SecondInner = 4
 intRank MostInner = 5
 fileFromInt :: Int -> File
-fileFromInt x = if x>=0 && x<24 then File {color = colorSegm $ div x 8,
+fileFromInt x = if x>=0 && x<24 then File {segmColor = colorSegm $ div x 8,
                                            colorSegmFile = segmEightFromInt $ mod x 8} else undefined
 intFile :: File -> Int
 intFile (File c s) = 8 * intColorSegm c + intColorSegmEight s
@@ -126,4 +126,4 @@ otherSegmHalf :: SegmentHalf -> SegmentHalf
 otherSegmHalf FirstHalf = SecondHalf
 otherSegmHalf SecondHalf = FirstHalf
 
-data Pos = Pos { rank :: Rank, file :: File }
+data Pos = Pos { rank :: Rank, file :: File } deriving (Eq, Show, Read)
