@@ -282,3 +282,7 @@ fromToFilewise (Pos a b) (Pos c d)
                Just f -> f
                Nothing -> []
   | otherwise = []
+type StraightVecsOfKinds = ([LinearVec RankwiseDirection], [LinearVec FilewiseDirection])
+type LinearVecsOfKinds = (StraightVecsOfKinds, [LinearVec DiagonalDirection])
+fromToStraight :: Pos -> Pos -> StraightVecsOfKinds
+fromToStraight a b = ( (fromToRankwise a b) , (fromToFilewise a b) )
