@@ -171,6 +171,7 @@ instance (LinearDirection t) => Eq (LinearVec t) where
   (LinearVec a c) == (LinearVec b d) = (a == b) && (c == d)
 instance (LinearDirection a) => Vec (LinearVec a) where
   reverMaybe x = Just $ rever x
+  add p (LinearVec d Once) = addOne d p
   add p m = foldl _addMaybe (Just p) (unitsInvolRank m (rank p))
 _addMaybe :: (LinearDirection a) => Maybe Pos -> (LinearVec a) -> Maybe Pos
 _addMaybe p m = do { jp <- p;
