@@ -3,6 +3,7 @@ module ThreeManChess.Engine.Possibilities where
 
 import Data.Data
 import ThreeManChess.Engine.Pos
+import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.Figure
 
 class --(Eq a , Read a, Show a) =>
@@ -11,6 +12,7 @@ class --(Eq a , Read a, Show a) =>
 class (Reversable a, Eq a-- , Ord a
       ) => LinearDirection a where
   tailRankInvol :: LinearVec a -> Maybe (Either (Rank -> (LinearVec a)) (LinearVec a))
+  addOne :: a -> Pos -> Maybe Pos
 data Orientation = Rankwise | Filewise deriving (Eq, Read, Show)
 perpendicularTo :: Orientation -> Orientation
 perpendicularTo Rankwise = Filewise
@@ -28,6 +30,11 @@ instance LinearDirection RankwiseDirection where
   tailRankInvol (LinearVec Inwards (OnceMore c)) = Just $ Left (\x -> LinearVec (case x of MostInner -> Outwards
                                                                                            _ -> Inwards) c)
   tailRankInvol (LinearVec Outwards (OnceMore c)) = Just $ Right (LinearVec Outwards c)
+  addOne Inwards (Pos MostInner file) = Just (Pos MostInner $ opposite file)
+  addOne Inwards (Pos rank file) = Just (Pos (inw rank) file)
+  addOne Outwards (Pos rank file) =
+    do { o <- out rank;
+         return (Pos o file) }
 instance Eq RankwiseDirection where
   Inwards == Inwards = True
   Outwards == Outwards = True
@@ -39,9 +46,13 @@ instance Reversable FilewiseDirection where
   rever Minuswards = Pluswards
 instance StraightDirection FilewiseDirection where
   orientation _ = Filewise
+filewiseInc :: FilewiseDirection -> File -> File
+filewiseInc Pluswards = plus
+filewiseInc Minuswards = minus
 instance LinearDirection FilewiseDirection where
   tailRankInvol (LinearVec _ Once) = Nothing
   tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
+  addOne w (Pos rank file) = Just (Pos rank $ filewiseInc w file)
 instance Eq FilewiseDirection where
   Pluswards == Pluswards = True
   Minuswards == Minuswards = True
@@ -58,6 +69,42 @@ instance LinearDirection DiagonalDirection where
     Just $ Left (\x -> LinearVec (case x of MostInner -> (DiagonalDirection Outwards (rever f))
                                             _ -> (DiagonalDirection Inwards f)) c)
   tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
+  addOne (DiagonalDirection Inwards p) (Pos MostInner (File c (SegmentEight q r))) =
+    Just
+    (Pos MostInner
+      (case p of
+          Pluswards ->
+            case q of
+              SegmentQuarter SecondHalf SecondHalf ->
+                File{segmColor=prev c,
+                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf,quarterHalf=r}}
+              SegmentQuarter SecondHalf FirstHalf ->
+                File{segmColor=next c,
+                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf, quarterHalf=r}}
+              SegmentQuarter FirstHalf SecondHalf ->
+                File{segmColor=next c,
+                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
+              SegmentQuarter FirstHalf FirstHalf ->
+                File{segmColor=next c,
+                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
+          Minuswards ->
+            case q of
+              SegmentQuarter FirstHalf FirstHalf ->
+                File{segmColor=next c,
+                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf,quarterHalf=r}}
+              SegmentQuarter SecondHalf SecondHalf ->
+                File{segmColor=prev c,
+                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
+              SegmentQuarter SecondHalf FirstHalf ->
+                File{segmColor=prev c,
+                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
+              SegmentQuarter FirstHalf SecondHalf ->
+                File{segmColor=prev c,
+                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf, quarterHalf=r}}
+      ))
+  addOne (DiagonalDirection Inwards p) (Pos rank file) = Just (Pos (inw rank) (filewiseInc p file))
+  addOne (DiagonalDirection Outwards p) (Pos rank file) =
+    do { o <- out rank; return (Pos o (filewiseInc p file))}
 instance Eq DiagonalDirection where
   (DiagonalDirection a b) == (DiagonalDirection c d) = (a == c) && (b == d)
 instance Reversable DiagonalDirection where
@@ -71,6 +118,7 @@ instance Ord Count where
 class (Eq a-- , Read a, Show a
       ) => Vec a where
   reverMaybe :: a -> Maybe a
+  add :: Pos -> a -> Maybe Pos
 class (Vec a, Reversable a) => ReversableVec a
 -- instance (Reversable a) => Vec (ReversableVec a) where
 --   reverMaybe x = Just $ rever x
@@ -82,11 +130,25 @@ instance Eq Castling where
   KingsideCastling == KingsideCastling = True
 instance Vec Castling where
   reverMaybe _ = Nothing
+  add (Pos MostOuter (File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf))) QueensideCastling =
+    Just (Pos MostOuter File{segmColor=c,
+                             colorSegmFile=SegmentEight{
+                                segmentQuarter=SegmentQuarter {
+                                    half=FirstHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}})
+  add _ QueensideCastling = undefined
+  add (Pos MostOuter (File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf))) KingsideCastling =
+    Just (Pos MostOuter File{segmColor=c,
+                             colorSegmFile=SegmentEight{
+                                segmentQuarter=SegmentQuarter {
+                                    half=SecondHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}})
+  add _ KingsideCastling = undefined
 data PawnJumpByTwo = PawnJumpByTwo --deriving (Vec)
 instance Eq PawnJumpByTwo where
   PawnJumpByTwo == PawnJumpByTwo = True
 instance Vec PawnJumpByTwo where
   reverMaybe PawnJumpByTwo = Nothing
+  add (Pos SecondOuter f) PawnJumpByTwo = Just (Pos MiddleInner f)
+  add _ PawnJumpByTwo = Nothing
 data LinearDirection a => LinearVec a = LinearVec a Count --deriving (Ord)
 -- instance (LinearDirection a) => Ord (LinearVec a)
 instance (LinearDirection a) => ReversableVec (LinearVec a)
@@ -96,6 +158,11 @@ instance (LinearDirection t) => Eq (LinearVec t) where
   (LinearVec a c) == (LinearVec b d) = (a == b) && (c == d)
 instance (LinearDirection a) => Vec (LinearVec a) where
   reverMaybe x = Just $ rever x
+  add p m = foldl _addMaybe (Just p) (unitsInvolRank m (rank p))
+_addMaybe :: (LinearDirection a) => Maybe Pos -> (LinearVec a) -> Maybe Pos
+_addMaybe p m = do { jp <- p;
+                     o <- add jp m;
+                     return o}
 data KnightVec = KnightVec RankwiseDirection FilewiseDirection Orientation -- Orientation :: twice
 -- instance Ord KnightVec
 instance Eq KnightVec where
@@ -105,7 +172,16 @@ instance Reversable KnightVec where
   rever (KnightVec r f orient) = (KnightVec (rever r) (rever f) orient)
 instance Vec KnightVec where
   reverMaybe x = Just $ rever x
+-- add KnightMove {rankwise=r, filewise=f, twice=t} x =
+--   do { fl <- add UnitStraightMove {direction=case t of Rankwise -> r; Filewise -> f} x;
+--        return add UnitStraightMove {direction=case t of Filewise -> r; Rankwise -> f} fl }
+  add x (KnightVec r f t) =
+    do { x <- addOne r x;
+         x <- addOne f x;
+         x <- (case t of Rankwise -> addOne r; Filewise -> addOne f) x;
+         return x;}
 
+-- add LinearMove m p = foldl add p $ unitsInvolRank m
 -- class StraightVec
 -- class (StraightDirection a) => StraightVec a
 -- instance (StraightDirection a) => StraightVec (LinearVec a)
@@ -149,69 +225,3 @@ units x = let
 unitsInvolRank :: (LinearDirection a) => LinearVec a -> Rank -> [LinearVec a]
 unitsInvolRank x = either id const $ units x
 
--- add :: Move -> Pos -> Maybe Pos
--- add KnightMove {rankwise=r, filewise=f, twice=t} x =
---   do { fl <- add UnitStraightMove {direction=case t of Rankwise -> r; Filewise -> f} x;
---        return add UnitStraightMove {direction=case t of Filewise -> r; Rankwise -> f} fl }
--- add QueensideCastling (Pos MostOuter (File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf))) =
---   Just Pos {rank=MostOuter, file=File{color=c,
---                                       colorSegmFile=SegmentEight{
---                                          segmentQuarter=SegmentQuarter {
---                                              half=FirstHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}}}
--- add QueensideCastling _ = undefined
--- add KingsideCastling (Pos MostOuter (File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf))) =
---   Just Pos {rank=MostOuter, file=File{color=c,
---                                       colorSegmFile=SegmentEight{
---                                          segmentQuarter=SegmentQuarter {
---                                              half=SecondHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}}}
--- add KingsideCastling _ = undefined
--- add UnitRankwiseMove {direction=Inwards, count=Once} (Pos MostInner file) = Just Pos {rank=MostInner,file=opposite file}
--- add UnitRankwiseMove {direction=Inwards, count=Once} (Pos rank file) = Just Pos {rank=inw rank,file=file}
--- add UnitRankwiseMove {direction=Outwards, count=Once} (Pos rank file) =
---   do { o <- out rank;
---        return Pos {rank=o,file=file} }
--- add UnitFilewiseMove {direction=Pluswards, count=Once} (Pos rank file) = Just Pos {rank=rank, file=plus file}
--- add UnitFilewiseMove {direction=Minuswards, count=Once} (Pos rank file) = Just Pos {rank=rank, file=minus file}
--- add UnitDiagonalMove {direction=(DiagonalDirection Inwards p), count=Once}
---                      (Pos MostInner (File c (SegmentEight q r))) =
---   Just Pos{
---   rank=MostInner,
---   file =
---       case p of
---         Pluswards ->
---           case q of
---             SegmentQuarter SecondHalf SecondHalf ->
---               File{color=prev c,
---                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf,quarterHalf=r}}
---             SegmentQuarter SecondHalf FirstHalf ->
---               File{color=next c,
---                    colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf, quarterHalf=r}}
---             SegmentQuarter FirstHalf SecondHalf ->
---               File{color=next c,
---                    colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
---             SegmentQuarter FirstHalf FirstHalf ->
---               File{color=next c,
---                    colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
---         Minuswards ->
---           case q of
---             SegmentQuarter FirstHalf FirstHalf ->
---               File{color=next c,
---                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf,quarterHalf=r}}
---             SegmentQuarter SecondHalf SecondHalf ->
---               File{color=prev c,
---                    colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
---             SegmentQuarter SecondHalf FirstHalf ->
---               File{color=prev c,
---                    colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
---             SegmentQuarter FirstHalf SecondHalf ->
---               File{color=prev c,
---                    colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf, quarterHalf=r}}
---               }
-filewiseInc :: FilewiseDirection -> File -> File
-filewiseInc Pluswards = plus
-filewiseInc Minuswards = minus
--- add UnitDiagonalMove {direction=(DiagonalDirection Inwards p), count=Once} (Pos rank file) =
---   Just Pos {rank=inw rank, file=filewiseInc p file}
--- add UnitDiagonalMove {direction=(DiagonalDirection Outwards p), count=Once} (Pos rank file) =
---   do { o <- out rank; return Pos {rank=o, file=filewiseInc p file}}
--- add LinearMove m p = foldl add p $ unitsInvolRank m
