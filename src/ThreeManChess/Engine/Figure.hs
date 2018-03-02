@@ -16,7 +16,8 @@ import ThreeManChess.Engine.FigType
 --   Typeable--, FigType
 --   )
 
-data Figure = Figure {figType :: FigType, color :: Color} deriving (Eq, Show, Read, Data, Typeable)
+-- data Figure = Figure {figType :: FigType, color :: Color} deriving (Eq, Show, Read, Data, Typeable)
+data Figure = Figure FigType Color deriving (Eq, Show, Read, Data, Typeable)
 
 -- data Figure a where
 --   Pawn :: {color :: Color, crossedCenter :: Bool} -> Figure FigType.FigType.Pawn
