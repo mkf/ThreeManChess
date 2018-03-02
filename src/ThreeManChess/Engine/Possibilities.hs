@@ -262,3 +262,23 @@ fromToRankwise (Pos a b) (Pos c d)
                                          o <- fromToRanks MostInner c;
                                          return $ LinearVec Inwards (addCount (count t) (count o)) }
   | otherwise = []
+fromToFilesWards :: FilewiseDirection -> File -> File -> Maybe Count
+fromToFilesWards w a b | a==b = Nothing
+  | otherwise = let wf = filewiseInc w in
+  let c = (wf a) in
+    if c==b then Just Once
+    else do { n <- fromToFilesWards w c b;
+              return $ OnceMore n }
+fromToFiles :: File -> File -> Maybe (LinearVec FilewiseDirection, LinearVec FilewiseDirection)
+fromToFiles a b = do { p <- fromToFilesWards Pluswards a b;
+                       m <- fromToFilesWards Minuswards a b;
+                       return $ let { pv = LinearVec Pluswards p;
+                                      mv = LinearVec Minuswards m } in
+                                  if m<p then (mv,pv) else (pv,mv) }
+fromToFilewise :: Pos -> Pos -> [LinearVec FilewiseDirection]
+fromToFilewise (Pos a b) (Pos c d)
+  | a == c = case do { f <- fromToFiles b d;
+                       return [(fst f), (snd f)] } of
+               Just f -> f
+               Nothing -> []
+  | otherwise = []
