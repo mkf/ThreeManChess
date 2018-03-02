@@ -1,4 +1,4 @@
-{-# Language DuplicateRecordFields,GADTs #-}
+{-# Language DuplicateRecordFields,GADTs,RankNTypes,DeriveDataTypeable,ScopedTypeVariables #-}
 module ThreeManChess.Engine.Possibilities where
 
 import Data.Data
@@ -9,39 +9,55 @@ class --(Eq a , Read a, Show a) =>
   Reversable a where
   rever :: a -> a
 class (Reversable a, Eq a-- , Ord a
-      ) => LinearDirection a
+      ) => LinearDirection a where
+  tailRankInvol :: LinearVec a -> Maybe (Either (Rank -> (LinearVec a)) (LinearVec a))
 data Orientation = Rankwise | Filewise deriving (Eq, Read, Show)
 perpendicularTo :: Orientation -> Orientation
 perpendicularTo Rankwise = Filewise
 perpendicularTo Filewise = Rankwise
 class (LinearDirection a) => StraightDirection a where
   orientation :: a -> Orientation
-data RankwiseDirection = Inwards | Outwards -- deriving StraightDirection
+data RankwiseDirection = Inwards | Outwards deriving (Data, Typeable)-- deriving StraightDirection
 instance Reversable RankwiseDirection where
   rever Inwards = Outwards
   rever Outwards = Inwards
 instance StraightDirection RankwiseDirection where
   orientation _ = Rankwise
-instance LinearDirection RankwiseDirection
+instance LinearDirection RankwiseDirection where
+  tailRankInvol (LinearVec _ Once) = Nothing
+  tailRankInvol (LinearVec Inwards (OnceMore c)) = Just $ Left (\x -> LinearVec (case x of MostInner -> Outwards
+                                                                                           _ -> Inwards) c)
+  tailRankInvol (LinearVec Outwards (OnceMore c)) = Just $ Right (LinearVec Outwards c)
 instance Eq RankwiseDirection where
   Inwards == Inwards = True
   Outwards == Outwards = True
   Inwards == Outwards = False
   Outwards == Inwards = False
-data FilewiseDirection = Pluswards | Minuswards -- deriving StraightDirection
+data FilewiseDirection = Pluswards | Minuswards deriving (Data, Typeable)-- deriving StraightDirection
 instance Reversable FilewiseDirection where
   rever Pluswards = Minuswards
   rever Minuswards = Pluswards
 instance StraightDirection FilewiseDirection where
   orientation _ = Filewise
-instance LinearDirection FilewiseDirection
+instance LinearDirection FilewiseDirection where
+  tailRankInvol (LinearVec _ Once) = Nothing
+  tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
 instance Eq FilewiseDirection where
   Pluswards == Pluswards = True
   Minuswards == Minuswards = True
   Pluswards == Minuswards = False
   Minuswards == Pluswards = False
 data DiagonalDirection = DiagonalDirection RankwiseDirection FilewiseDirection -- deriving LinearDirection
-instance LinearDirection DiagonalDirection
+rankwise :: DiagonalDirection -> RankwiseDirection
+rankwise (DiagonalDirection x _) = x
+filewise :: DiagonalDirection -> FilewiseDirection
+filewise (DiagonalDirection _ x) = x
+instance LinearDirection DiagonalDirection where
+  tailRankInvol (LinearVec _ Once) = Nothing
+  tailRankInvol (LinearVec (DiagonalDirection Inwards f) (OnceMore c)) =
+    Just $ Left (\x -> LinearVec (case x of MostInner -> (DiagonalDirection Outwards (rever f))
+                                            _ -> (DiagonalDirection Inwards f)) c)
+  tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
 instance Eq DiagonalDirection where
   (DiagonalDirection a b) == (DiagonalDirection c d) = (a == c) && (b == d)
 instance Reversable DiagonalDirection where
@@ -71,12 +87,12 @@ instance Eq PawnJumpByTwo where
   PawnJumpByTwo == PawnJumpByTwo = True
 instance Vec PawnJumpByTwo where
   reverMaybe PawnJumpByTwo = Nothing
-data LinearVec a = LinearVec a Count --deriving (Ord)
+data LinearDirection a => LinearVec a = LinearVec a Count --deriving (Ord)
 -- instance (LinearDirection a) => Ord (LinearVec a)
 instance (LinearDirection a) => ReversableVec (LinearVec a)
 instance (LinearDirection a) => Reversable (LinearVec a) where
   rever (LinearVec d n) = (LinearVec (rever d) n)
-instance (Eq a) => Eq (LinearVec a) where
+instance (LinearDirection t) => Eq (LinearVec t) where
   (LinearVec a c) == (LinearVec b d) = (a == b) && (c == d)
 instance (LinearDirection a) => Vec (LinearVec a) where
   reverMaybe x = Just $ rever x
@@ -90,7 +106,10 @@ instance Reversable KnightVec where
 instance Vec KnightVec where
   reverMaybe x = Just $ rever x
 
--- class Straigt
+-- class StraightVec
+-- class (StraightDirection a) => StraightVec a
+-- instance (StraightDirection a) => StraightVec (LinearVec a)
+-- type (StraightDirection a) => StraightVec a = LinearVec a
 
 -- type StraightMove = LinearMove { direction :: StraightDirection }
 -- type DiagonalMove = LinearMove { direction :: DiagonalDirection }
@@ -104,34 +123,31 @@ instance Vec KnightVec where
 -- type UnitFilewiseMove = UnitStraightMove { direction :: FilewiseDirection }
 -- newtype UnitRankInvolMove = UnitRankwiseMove | UnitDiagonalMove
 --                           deriving (Eq, Ord, Read, Show, UnitLinearMove, RankInvolMove)
--- headLinear :: LinearMove -> UnitLinearMove
--- headLinear LinearMove {direction=d} = UnitLinearMove {direction=d}
--- tailFilewise :: FilewiseMove -> Maybe UnitStraightMove
--- tailFilewise FilewiseMove {count=Once} = Nothing
--- tailFilewise FilewiseMove {direction=d, count=OnceMore c} = FilewiseMove {direction=d, count=c}
--- tailRankInvol :: LinearMove -> Maybe Either (Rank -> RankInvolMove) LinearMove
--- tailRankInvol RankInvolMove {count=Once} = Nothing
--- tailRankInvol RankwiseMove {direction=Inwards, count=OnceMore c} =
---   Just Left (\x -> RankwiseMove {direction =
---                                case x of MostInner -> Outwards
---                                          _ -> Inwards,
---                             count=c})
--- tailRankInvol DiagonalMove {direction=DiagonalDirection {rankwise=Inwards, filewise=f}, count=OnceMore c} =
---   Just Left (\x -> DiagonalMove {direction=
---                                case x of MostInner -> DiagonalDirection{
---                                            rankwise=Outwards, filewise=rever f}
---                                          _ -> DiagonalDirection{rankwise=Inwards, filewise=f},
---                             count=c})
--- tailRankInvol LinearMove {direction=d, count=OnceMore c} = Just Right LinearMove {direction=d, count=c}
+headLinear :: (LinearDirection a) => LinearVec a -> LinearVec a --UnitLinearVec
+headLinear (LinearVec d _) = LinearVec d Once
+tailFilewise :: LinearVec FilewiseDirection -> Maybe (LinearVec FilewiseDirection)
+tailFilewise (LinearVec _ Once) = Nothing
+tailFilewise (LinearVec d (OnceMore c)) = Just (LinearVec d c)
 -- units :: LinearMove -> Either (Rank -> [UnitRankInvolMove]) [UnitLinearMove]
--- units x = let
---   {t = tailRankInvol x;
---    h = headLinear x} in h :
---     case t of
---       Just e -> either (\left rank -> units $ left rank) units  e
---       Nothing -> []
+cons :: a -> ([a] -> [a])
+cons a as = a:as
+units :: (LinearDirection a) => LinearVec a -> Either (Rank -> [LinearVec a]) [LinearVec a]
+units x = let
+  {t = tailRankInvol x;
+   h = headLinear x} in
+    case t of
+      Just (Right justTail) -> let ur = units justTail in case ur of
+        Right justRestOfUnits -> Right $ h:justRestOfUnits
+        _ -> undefined
+      Just (Left tailByRank) ->
+        Left (\rankArg ->
+                let ul = units $ tailByRank rankArg in case ul of
+                  Right right -> h:right
+                  Left restByRank -> cons h $ restByRank rankArg)
+      Nothing -> Right []
 -- unitsInvolRank :: LinearMove -> Rank -> [UnitLinearMove]
--- unitsInvolRank x = either id const $ units x
+unitsInvolRank :: (LinearDirection a) => LinearVec a -> Rank -> [LinearVec a]
+unitsInvolRank x = either id const $ units x
 
 -- add :: Move -> Pos -> Maybe Pos
 -- add KnightMove {rankwise=r, filewise=f, twice=t} x =
