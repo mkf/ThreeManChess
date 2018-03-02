@@ -1,3 +1,5 @@
 .stack-work/
 ThreeManChess.cabal
 *~
+.idea/workspace.xml
+
