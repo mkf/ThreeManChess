@@ -2,9 +2,11 @@
 module ThreeManChess.Engine.Possibilities where
 
 import Data.Data
+import Data.Maybe
 import ThreeManChess.Engine.Pos
 import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.Figure
+import ThreeManChess.Engine.FigType
 
 class --(Eq a , Read a, Show a) =>
   Reversable a where
@@ -110,6 +112,11 @@ instance Eq DiagonalDirection where
 instance Reversable DiagonalDirection where
   rever (DiagonalDirection a b) = DiagonalDirection (rever a) (rever b)
 data Count = Once | OnceMore Count deriving (Eq, Read, Show)
+addCount :: Count -> Count -> Count
+addCount Once Once = OnceMore Once
+addCount a Once = OnceMore a
+addCount Once a = OnceMore a
+addCount (OnceMore a) (OnceMore b) = OnceMore $ OnceMore $ addCount a b
 instance Ord Count where
   Once `compare` Once = EQ
   OnceMore a `compare` OnceMore b = a `compare` b
@@ -149,7 +156,13 @@ instance Vec PawnJumpByTwo where
   reverMaybe PawnJumpByTwo = Nothing
   add (Pos SecondOuter f) PawnJumpByTwo = Just (Pos MiddleInner f)
   add _ PawnJumpByTwo = Nothing
-data LinearDirection a => LinearVec a = LinearVec a Count --deriving (Ord)
+-- data (LinearDirection a) => LinearVec a = LinearVec a Count --deriving (Ord)
+data LinearVec a where
+  LinearVec :: LinearDirection a => a -> Count -> LinearVec a
+direction :: (LinearDirection a) => LinearVec a -> a
+direction (LinearVec d _) = d
+count :: (LinearDirection a) => LinearVec a -> Count
+count (LinearVec _ c) = c
 -- instance (LinearDirection a) => Ord (LinearVec a)
 instance (LinearDirection a) => ReversableVec (LinearVec a)
 instance (LinearDirection a) => Reversable (LinearVec a) where
@@ -224,4 +237,28 @@ units x = let
 -- unitsInvolRank :: LinearMove -> Rank -> [UnitLinearMove]
 unitsInvolRank :: (LinearDirection a) => LinearVec a -> Rank -> [LinearVec a]
 unitsInvolRank x = either id const $ units x
-
+-- fromToVecsByFig :: FigType -> Pos -> Pos -> [Vec a]
+-- fromToVecsByFig Queen a b = (fromToVecs Rook a b) ++ (fromToVecs Bishop a b)
+-- fromToVecsByFig Rook
+-- fromToVecsByFig Bishop
+rankOnceWards :: RankwiseDirection -> Rank -> Maybe Rank
+rankOnceWards Inwards = Just . inw
+rankOnceWards Outwards = out
+fromToRanks :: Rank -> Rank -> Maybe (LinearVec RankwiseDirection)
+fromToRanks a b = case (compare a b) of
+  EQ -> Nothing
+  co -> Just $ let { d = case co of LT -> Inwards; GT -> Outwards } in
+                 case do { row <- rankOnceWards d a;
+                           ftr <- fromToRanks row b;
+                           return ftr } of
+                   Nothing -> LinearVec d Once
+                   Just (LinearVec d om) -> LinearVec d (OnceMore om)
+fromToRankwise :: Pos -> Pos -> [LinearVec RankwiseDirection]
+fromToRankwise (Pos a b) (Pos c d)
+  | b == d = maybeToList (fromToRanks a c)
+  | opposite b == d = maybeToList $ do { t <- (case a of
+                                                MostInner -> Just $ LinearVec Inwards Once
+                                                a -> fromToRanks a MostInner);
+                                         o <- fromToRanks MostInner c;
+                                         return $ LinearVec Inwards (addCount (count t) (count o)) }
+  | otherwise = []
