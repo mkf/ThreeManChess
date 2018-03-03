@@ -1,4 +1,4 @@
-{-# Language DuplicateRecordFields,GADTs,RankNTypes,DeriveDataTypeable,ScopedTypeVariables #-}
+{-# Language DuplicateRecordFields,GADTs,RankNTypes,DeriveDataTypeable,ScopedTypeVariables,ExistentialQuantification #-}
 module ThreeManChess.Engine.Possibilities where
 
 import Data.Data
@@ -126,6 +126,9 @@ class (Eq a-- , Read a, Show a
       ) => Vec a where
   reverMaybe :: a -> Maybe a
   add :: Pos -> a -> Maybe Pos
+-- data VecC = forall a . Vec a => MkVecC a
+data VecC where
+  MkVecC :: Vec a => a -> VecC
 class (Vec a, Reversable a) => ReversableVec a
 -- instance (Reversable a) => Vec (ReversableVec a) where
 --   reverMaybe x = Just $ rever x
@@ -159,6 +162,12 @@ instance Vec PawnJumpByTwo where
 -- data (LinearDirection a) => LinearVec a = LinearVec a Count --deriving (Ord)
 data LinearVec a where
   LinearVec :: LinearDirection a => a -> Count -> LinearVec a
+data LinearVecC = forall a . LinearDirection a => MkLinearVecC (LinearVec a)
+-- data LinearVecC where
+--   MkLinearVecC :: LinearDirection a => a -> LinearVecC (LinearVec a)
+data StraightVecC = forall a . StraightDirection a => MkStraightVecC (LinearVec a)
+-- data StraightVecC where
+--   MkStraightVecC :: StraightDirection a => a -> StraightVecC (LinearVec a)
 direction :: (LinearDirection a) => LinearVec a -> a
 direction (LinearVec d _) = d
 count :: (LinearDirection a) => LinearVec a -> Count
@@ -283,7 +292,16 @@ fromToFilewise (Pos a b) (Pos c d)
                Just f -> f
                Nothing -> []
   | otherwise = []
-type StraightVecsOfKinds = ([LinearVec RankwiseDirection], [LinearVec FilewiseDirection])
-type LinearVecsOfKinds = (StraightVecsOfKinds, [LinearVec DiagonalDirection])
-fromToStraight :: Pos -> Pos -> StraightVecsOfKinds
-fromToStraight a b = ( (fromToRankwise a b) , (fromToFilewise a b) )
+-- type StraightVecsOfKinds = ([LinearVec RankwiseDirection], [LinearVec FilewiseDirection])
+-- type LinearVecsOfKinds = (StraightVecsOfKinds, [LinearVec DiagonalDirection])
+-- fromToStraight :: Pos -> Pos -> StraightVecsOfKinds
+fromToStraight :: Pos -> Pos -> [StraightVecC]
+fromToStraight a b = (map MkStraightVecC (fromToRankwise a b)) ++ (map MkStraightVecC (fromToFilewise a b))
+-- fromToDiagWards :: DiagonalDirection -> Pos -> Pos -> Maybe Count
+-- fromToDiagWards (DiagonalDirection Outwards _) (Pos MostOuter _) _ = Nothing
+-- fromToDiagWards (DiagonalDirection Inwards w) (Pos MostInner a) (Pos MostInner b)
+--   | (let f = filewiseInc w in
+--        a == ((f.f.f.f.f . f.f.f.f.f) b)) = Just Once
+--   | otherwise = Nothing
+-- fromToDiagonal :: Pos -> Pos -> [LinearVec DiagonalDirection]
+-- fromToDiagonal a b
