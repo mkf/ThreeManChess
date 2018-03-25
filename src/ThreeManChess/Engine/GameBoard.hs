@@ -18,6 +18,6 @@ segmEightStarting (SegmentEight (SegmentQuarter x y) z)
   | otherwise = undefined
 
 start :: GameBoard
-start (Pos SecondOuter (File c _)) = Just $ Figure InwardPawn c
-start (Pos MostOuter (File c s)) = Just $ Figure (segmEightStarting s) c
+start (SecondOuter, File c _) = Just $ Figure InwardPawn c
+start (MostOuter, File c s) = Just $ Figure (segmEightStarting s) c
 start _ = Nothing

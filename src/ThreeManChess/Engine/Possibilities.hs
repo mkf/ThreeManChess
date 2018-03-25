@@ -32,11 +32,11 @@ instance LinearDirection RankwiseDirection where
   tailRankInvol (LinearVec Inwards (OnceMore c)) = Just $ Left (\x -> LinearVec (case x of MostInner -> Outwards
                                                                                            _ -> Inwards) c)
   tailRankInvol (LinearVec Outwards (OnceMore c)) = Just $ Right (LinearVec Outwards c)
-  addOne Inwards (Pos MostInner file) = Just (Pos MostInner $ opposite file)
-  addOne Inwards (Pos rank file) = Just (Pos (inw rank) file)
-  addOne Outwards (Pos rank file) =
+  addOne Inwards (MostInner, file) = Just (MostInner, opposite file)
+  addOne Inwards (rank, file) = Just (inw rank, file)
+  addOne Outwards (rank, file) =
     do { o <- out rank;
-         return (Pos o file) }
+         return (o, file) }
 instance Eq RankwiseDirection where
   Inwards == Inwards = True
   Outwards == Outwards = True
@@ -54,7 +54,7 @@ filewiseInc Minuswards = minus
 instance LinearDirection FilewiseDirection where
   tailRankInvol (LinearVec _ Once) = Nothing
   tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
-  addOne w (Pos rank file) = Just (Pos rank $ filewiseInc w file)
+  addOne w (rank, file) = Just (rank, filewiseInc w file)
 instance Eq FilewiseDirection where
   Pluswards == Pluswards = True
   Minuswards == Minuswards = True
@@ -68,45 +68,45 @@ filewise (DiagonalDirection _ x) = x
 instance LinearDirection DiagonalDirection where
   tailRankInvol (LinearVec _ Once) = Nothing
   tailRankInvol (LinearVec (DiagonalDirection Inwards f) (OnceMore c)) =
-    Just $ Left (\x -> LinearVec (case x of MostInner -> (DiagonalDirection Outwards (rever f))
-                                            _ -> (DiagonalDirection Inwards f)) c)
+    Just $ Left (\x -> LinearVec (case x of MostInner -> DiagonalDirection Outwards (rever f)
+                                            _ -> DiagonalDirection Inwards f) c)
   tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
-  addOne (DiagonalDirection Inwards p) (Pos MostInner (File c (SegmentEight q r))) =
+  addOne (DiagonalDirection Inwards p) (MostInner, File c (SegmentEight q r)) =
     Just
-    (Pos MostInner
-      (case p of
-          Pluswards ->
-            case q of
-              SegmentQuarter SecondHalf SecondHalf ->
-                File{segmColor=prev c,
-                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf,quarterHalf=r}}
-              SegmentQuarter SecondHalf FirstHalf ->
-                File{segmColor=next c,
-                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf, quarterHalf=r}}
-              SegmentQuarter FirstHalf SecondHalf ->
-                File{segmColor=next c,
-                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
-              SegmentQuarter FirstHalf FirstHalf ->
-                File{segmColor=next c,
-                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
-          Minuswards ->
-            case q of
-              SegmentQuarter FirstHalf FirstHalf ->
-                File{segmColor=next c,
-                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf,quarterHalf=r}}
-              SegmentQuarter SecondHalf SecondHalf ->
-                File{segmColor=prev c,
-                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
-              SegmentQuarter SecondHalf FirstHalf ->
-                File{segmColor=prev c,
-                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
-              SegmentQuarter FirstHalf SecondHalf ->
-                File{segmColor=prev c,
-                     colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf, quarterHalf=r}}
-      ))
-  addOne (DiagonalDirection Inwards p) (Pos rank file) = Just (Pos (inw rank) (filewiseInc p file))
-  addOne (DiagonalDirection Outwards p) (Pos rank file) =
-    do { o <- out rank; return (Pos o (filewiseInc p file))}
+    (MostInner,
+     case p of
+       Pluswards ->
+         case q of
+           SegmentQuarter SecondHalf SecondHalf ->
+             File{segmColor=prev c,
+                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf,quarterHalf=r}}
+           SegmentQuarter SecondHalf FirstHalf ->
+             File{segmColor=next c,
+                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf, quarterHalf=r}}
+           SegmentQuarter FirstHalf SecondHalf ->
+             File{segmColor=next c,
+                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
+           SegmentQuarter FirstHalf FirstHalf ->
+             File{segmColor=next c,
+                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
+       Minuswards ->
+         case q of
+           SegmentQuarter FirstHalf FirstHalf ->
+             File{segmColor=next c,
+                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf,quarterHalf=r}}
+           SegmentQuarter SecondHalf SecondHalf ->
+             File{segmColor=prev c,
+                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
+           SegmentQuarter SecondHalf FirstHalf ->
+             File{segmColor=prev c,
+                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
+           SegmentQuarter FirstHalf SecondHalf ->
+             File{segmColor=prev c,
+                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf, quarterHalf=r}}
+    )
+  addOne (DiagonalDirection Inwards p) (rank, file) = Just (inw rank, filewiseInc p file)
+  addOne (DiagonalDirection Outwards p) (rank, file) =
+    do { o <- out rank; return (o, filewiseInc p file)}
 instance Eq DiagonalDirection where
   (DiagonalDirection a b) == (DiagonalDirection c d) = (a == c) && (b == d)
 instance Reversable DiagonalDirection where
@@ -140,14 +140,14 @@ instance Eq Castling where
   KingsideCastling == KingsideCastling = True
 instance Vec Castling where
   reverMaybe _ = Nothing
-  add (Pos MostOuter (File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf))) QueensideCastling =
-    Just (Pos MostOuter File{segmColor=c,
+  add (MostOuter, File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf)) QueensideCastling =
+    Just (MostOuter, File{segmColor=c,
                              colorSegmFile=SegmentEight{
                                 segmentQuarter=SegmentQuarter {
                                     half=FirstHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}})
   add _ QueensideCastling = undefined
-  add (Pos MostOuter (File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf))) KingsideCastling =
-    Just (Pos MostOuter File{segmColor=c,
+  add (MostOuter, File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf)) KingsideCastling =
+    Just (MostOuter, File{segmColor=c,
                              colorSegmFile=SegmentEight{
                                 segmentQuarter=SegmentQuarter {
                                     half=SecondHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}})
@@ -157,7 +157,7 @@ instance Eq PawnJumpByTwo where
   PawnJumpByTwo == PawnJumpByTwo = True
 instance Vec PawnJumpByTwo where
   reverMaybe PawnJumpByTwo = Nothing
-  add (Pos SecondOuter f) PawnJumpByTwo = Just (Pos MiddleInner f)
+  add (SecondOuter, f) PawnJumpByTwo = Just (MiddleInner, f)
   add _ PawnJumpByTwo = Nothing
 -- data (LinearDirection a) => LinearVec a = LinearVec a Count --deriving (Ord)
 data LinearVec a where
@@ -175,24 +175,23 @@ count (LinearVec _ c) = c
 -- instance (LinearDirection a) => Ord (LinearVec a)
 instance (LinearDirection a) => ReversableVec (LinearVec a)
 instance (LinearDirection a) => Reversable (LinearVec a) where
-  rever (LinearVec d n) = (LinearVec (rever d) n)
+  rever (LinearVec d n) = LinearVec (rever d) n
 instance (LinearDirection t) => Eq (LinearVec t) where
   (LinearVec a c) == (LinearVec b d) = (a == b) && (c == d)
 instance (LinearDirection a) => Vec (LinearVec a) where
   reverMaybe x = Just $ rever x
   add p (LinearVec d Once) = addOne d p
   add p m = foldl _addMaybe (Just p) (unitsInvolRank m (rank p))
-_addMaybe :: (LinearDirection a) => Maybe Pos -> (LinearVec a) -> Maybe Pos
+_addMaybe :: (LinearDirection a) => Maybe Pos -> LinearVec a -> Maybe Pos
 _addMaybe p m = do { jp <- p;
-                     o <- add jp m;
-                     return o}
+                     add jp m;}
 data KnightVec = KnightVec RankwiseDirection FilewiseDirection Orientation -- Orientation :: twice
 -- instance Ord KnightVec
 instance Eq KnightVec where
   (KnightVec r f o) == (KnightVec rr ff oo) = (r==rr)&&(f==ff)&&(o==oo)
 instance ReversableVec KnightVec
 instance Reversable KnightVec where
-  rever (KnightVec r f orient) = (KnightVec (rever r) (rever f) orient)
+  rever (KnightVec r f orient) = KnightVec (rever r) (rever f) orient
 instance Vec KnightVec where
   reverMaybe x = Just $ rever x
 -- add KnightMove {rankwise=r, filewise=f, twice=t} x =
@@ -255,16 +254,15 @@ rankOnceWards :: RankwiseDirection -> Rank -> Maybe Rank
 rankOnceWards Inwards = Just . inw
 rankOnceWards Outwards = out
 fromToRanks :: Rank -> Rank -> Maybe (LinearVec RankwiseDirection)
-fromToRanks a b = case (compare a b) of
+fromToRanks a b = case compare a b of
   EQ -> Nothing
   co -> Just $ let { d = case co of LT -> Inwards; GT -> Outwards } in
                  case do { row <- rankOnceWards d a;
-                           ftr <- fromToRanks row b;
-                           return ftr } of
+                           fromToRanks row b;} of
                    Nothing -> LinearVec d Once
                    Just (LinearVec d om) -> LinearVec d (OnceMore om)
 fromToRankwise :: Pos -> Pos -> [LinearVec RankwiseDirection]
-fromToRankwise (Pos a b) (Pos c d)
+fromToRankwise (a, b) (c, d)
   | b == d = maybeToList (fromToRanks a c)
   | opposite b == d = maybeToList $ do { t <- (case a of
                                                 MostInner -> Just $ LinearVec Inwards Once
@@ -275,10 +273,9 @@ fromToRankwise (Pos a b) (Pos c d)
 fromToFilesWards :: FilewiseDirection -> File -> File -> Maybe Count
 fromToFilesWards w a b | a==b = Nothing
   | otherwise = let wf = filewiseInc w in
-  let c = (wf a) in
+  let c = wf a in
     if c==b then Just Once
-    else do { n <- fromToFilesWards w c b;
-              return $ OnceMore n }
+    else OnceMore <$> fromToFilesWards w c b
 fromToFiles :: File -> File -> Maybe (LinearVec FilewiseDirection, LinearVec FilewiseDirection)
 fromToFiles a b = do { p <- fromToFilesWards Pluswards a b;
                        m <- fromToFilesWards Minuswards a b;
@@ -286,11 +283,9 @@ fromToFiles a b = do { p <- fromToFilesWards Pluswards a b;
                                       mv = LinearVec Minuswards m } in
                                   if m<p then (mv,pv) else (pv,mv) }
 fromToFilewise :: Pos -> Pos -> [LinearVec FilewiseDirection]
-fromToFilewise (Pos a b) (Pos c d)
-  | a == c = case do { f <- fromToFiles b d;
-                       return [(fst f), (snd f)] } of
-               Just f -> f
-               Nothing -> []
+fromToFilewise (a, b) (c, d)
+  | a == c = fromMaybe [] $ do { f <- fromToFiles b d;
+                                 return [fst f, snd f] }
   | otherwise = []
 -- type StraightVecsOfKinds = ([LinearVec RankwiseDirection], [LinearVec FilewiseDirection])
 -- type LinearVecsOfKinds = (StraightVecsOfKinds, [LinearVec DiagonalDirection])
@@ -298,8 +293,8 @@ fromToFilewise (Pos a b) (Pos c d)
 fromToStraight :: Pos -> Pos -> [StraightVecC]
 fromToStraight a b = (map MkStraightVecC (fromToRankwise a b)) ++ (map MkStraightVecC (fromToFilewise a b))
 -- fromToDiagWards :: DiagonalDirection -> Pos -> Pos -> Maybe Count
--- fromToDiagWards (DiagonalDirection Outwards _) (Pos MostOuter _) _ = Nothing
--- fromToDiagWards (DiagonalDirection Inwards w) (Pos MostInner a) (Pos MostInner b)
+-- fromToDiagWards (DiagonalDirection Outwards _) (MostOuter, _) _ = Nothing
+-- fromToDiagWards (DiagonalDirection Inwards w) (MostInner, a) (MostInner, b)
 --   | (let f = filewiseInc w in
 --        a == ((f.f.f.f.f . f.f.f.f.f) b)) = Just Once
 --   | otherwise = Nothing

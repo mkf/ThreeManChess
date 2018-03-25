@@ -126,8 +126,9 @@ otherSegmHalf :: SegmentHalf -> SegmentHalf
 otherSegmHalf FirstHalf = SecondHalf
 otherSegmHalf SecondHalf = FirstHalf
 
-data Pos = Pos Rank File deriving (Eq, Show, Read)
+-- data Pos = Pos Rank File deriving (Eq, Show, Read)
+type Pos = (Rank, File)
 rank :: Pos -> Rank
-rank (Pos r _) = r
+rank (r, _) = r
 file :: Pos -> File
-file (Pos _ f) = f
+file (_, f) = f
