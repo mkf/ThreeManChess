@@ -134,7 +134,7 @@ substractCount (OnceMore a) Once = Just $ Plus a
 substractCount Once (OnceMore a) = Just $ Minus a
 substractCount (OnceMore a) (OnceMore b) = substractCount a b
 absSubstractCount :: Count -> Count -> Maybe Count
-absSubstractCount = curry $ (fmap absPlusMinus).(uncurry substractCount)
+absSubstractCount = curry $ fmap absPlusMinus . uncurry substractCount
 nonNegativeSubstractCount :: Count -> Count -> Maybe Count
 nonNegativeSubstractCount Once Once = Nothing
 nonNegativeSubstractCount (OnceMore a) Once = Just a
