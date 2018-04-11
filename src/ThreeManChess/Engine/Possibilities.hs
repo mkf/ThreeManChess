@@ -13,7 +13,7 @@ class --(Eq a , Read a, Show a) =>
   rever :: a -> a
 class (Reversable a, Eq a-- , Ord a
       ) => LinearDirection a where
-  tailRankInvol :: LinearVec a -> Maybe (Either (Rank -> (LinearVec a)) (LinearVec a))
+  tailRankInvol :: LinearVec a -> Maybe (Either (Rank -> LinearVec a) (LinearVec a))
   addOne :: a -> Pos -> Maybe Pos
 data Orientation = Rankwise | Filewise deriving (Eq, Read, Show)
 perpendicularTo :: Orientation -> Orientation
@@ -117,6 +117,30 @@ addCount Once Once = OnceMore Once
 addCount a Once = OnceMore a
 addCount Once a = OnceMore a
 addCount (OnceMore a) (OnceMore b) = OnceMore $ OnceMore $ addCount a b
+countFromPositiveInteger :: Integer -> Maybe Count
+countFromPositiveInteger 1 = Just Once
+countFromPositiveInteger a | a>1 = OnceMore <$> countFromPositiveInteger (a-1)
+                           | otherwise = Nothing
+data PlusMinus a = Plus a | Minus a deriving (Eq, Read, Show)
+absPlusMinus :: PlusMinus a -> a
+absPlusMinus (Plus a) = a
+absPlusMinus (Minus a) = a
+substractCount :: Count -> Count -> Maybe (PlusMinus Count)
+substractCount Once Once = Nothing
+substractCount (OnceMore a) Once = Just $ Plus a
+substractCount Once (OnceMore a) = Just $ Minus a
+substractCount (OnceMore a) (OnceMore b) = substractCount a b
+absSubstractCount :: Count -> Count -> Maybe Count
+absSubstractCount = curry $ (fmap absPlusMinus).(uncurry substractCount)
+nonNegativeSubstractCount :: Count -> Count -> Maybe Count
+nonNegativeSubstractCount Once Once = Nothing
+nonNegativeSubstractCount (OnceMore a) Once = Just a
+nonNegativeSubstractCount (OnceMore a) (OnceMore b) = nonNegativeSubstractCount a b
+nonNegativeSubstractCount _ _ = undefined
+positiveSubstractCount :: Count -> Count -> Count
+positiveSubstractCount (OnceMore a) Once = a
+positiveSubstractCount (OnceMore a) (OnceMore b) = positiveSubstractCount a b
+positiveSubstractCount _ _ = undefined
 instance Ord Count where
   Once `compare` Once = EQ
   OnceMore a `compare` OnceMore b = a `compare` b
@@ -253,21 +277,21 @@ unitsInvolRank x = either id const $ units x
 rankOnceWards :: RankwiseDirection -> Rank -> Maybe Rank
 rankOnceWards Inwards = Just . inw
 rankOnceWards Outwards = out
-fromToRanks :: Rank -> Rank -> Maybe (LinearVec RankwiseDirection)
-fromToRanks a b = case compare a b of
+fromToRanks :: (Rank, Rank) -> Maybe (LinearVec RankwiseDirection)
+fromToRanks (a,b) = case compare a b of
   EQ -> Nothing
   co -> Just $ let { d = case co of LT -> Inwards; GT -> Outwards } in
                  case do { row <- rankOnceWards d a;
-                           fromToRanks row b;} of
+                           curry fromToRanks row b;} of
                    Nothing -> LinearVec d Once
                    Just (LinearVec d om) -> LinearVec d (OnceMore om)
 fromToRankwise :: Pos -> Pos -> [LinearVec RankwiseDirection]
 fromToRankwise (a, b) (c, d)
-  | b == d = maybeToList (fromToRanks a c)
+  | b == d = maybeToList (fromToRanks (a,c))
   | opposite b == d = maybeToList $ do { t <- (case a of
                                                 MostInner -> Just $ LinearVec Inwards Once
-                                                a -> fromToRanks a MostInner);
-                                         o <- fromToRanks MostInner c;
+                                                a -> fromToRanks (a,MostInner));
+                                         o <- fromToRanks (MostInner,c);
                                          return $ LinearVec Inwards (addCount (count t) (count o)) }
   | otherwise = []
 fromToFilesWards :: FilewiseDirection -> File -> File -> Maybe Count
@@ -276,15 +300,15 @@ fromToFilesWards w a b | a==b = Nothing
   let c = wf a in
     if c==b then Just Once
     else OnceMore <$> fromToFilesWards w c b
-fromToFiles :: File -> File -> Maybe (LinearVec FilewiseDirection, LinearVec FilewiseDirection)
-fromToFiles a b = do { p <- fromToFilesWards Pluswards a b;
-                       m <- fromToFilesWards Minuswards a b;
-                       return $ let { pv = LinearVec Pluswards p;
-                                      mv = LinearVec Minuswards m } in
-                                  if m<p then (mv,pv) else (pv,mv) }
+fromToFiles :: (File, File) -> Maybe (LinearVec FilewiseDirection, LinearVec FilewiseDirection)
+fromToFiles (a,b) = do { p <- fromToFilesWards Pluswards a b;
+                         m <- fromToFilesWards Minuswards a b;
+                         return $ let { pv = LinearVec Pluswards p;
+                                        mv = LinearVec Minuswards m } in
+                                    if m<p then (mv,pv) else (pv,mv) }
 fromToFilewise :: Pos -> Pos -> [LinearVec FilewiseDirection]
 fromToFilewise (a, b) (c, d)
-  | a == c = fromMaybe [] $ do { f <- fromToFiles b d;
+  | a == c = fromMaybe [] $ do { f <- fromToFiles (b,d);
                                  return [fst f, snd f] }
   | otherwise = []
 -- type StraightVecsOfKinds = ([LinearVec RankwiseDirection], [LinearVec FilewiseDirection])
@@ -298,5 +322,66 @@ fromToStraight a b = (map MkStraightVecC (fromToRankwise a b)) ++ (map MkStraigh
 --   | (let f = filewiseInc w in
 --        a == ((f.f.f.f.f . f.f.f.f.f) b)) = Just Once
 --   | otherwise = Nothing
--- fromToDiagonal :: Pos -> Pos -> [LinearVec DiagonalDirection]
--- fromToDiagonal a b
+bothMaybe :: (Maybe a, Maybe a) -> Maybe (a, a)
+bothMaybe (m, n) = do { m <- m; n <- n; return (m,n); }
+mapHomoTuple2 :: (a -> b) -> (a, a) -> (b, b)
+mapHomoTuple2 f (a,b) = (f a, f b)
+sumCountPair :: (Count, Count) -> Count
+sumCountPair = uncurry addCount
+addMaybeCount :: Maybe Count -> Maybe Count -> Maybe Count
+addMaybeCount Nothing a = a
+addMaybeCount a Nothing = a
+addMaybeCount (Just a) (Just b) = Just $ addCount a b
+sumMaybeCountPair :: (Maybe Count, Maybe Count) -> Maybe Count
+sumMaybeCountPair = uncurry addMaybeCount
+filewiseToShortDiagonal :: LinearVec FilewiseDirection -> RankwiseDirection -> LinearVec DiagonalDirection
+filewiseToShortDiagonal (LinearVec f c) r = LinearVec (DiagonalDirection r f) c
+maybeIf :: (a -> Bool) -> Maybe a -> Maybe a
+maybeIf f (Just v) = if f v then Just v else Nothing
+maybeIf _ Nothing = Nothing
+fromToFilesShort :: (File, File) -> Maybe (LinearVec FilewiseDirection)
+fromToFilesShort = fmap fst . fromToFiles
+fromToShortDiagonal :: Pos -> Pos -> Maybe (LinearVec DiagonalDirection)
+fromToShortDiagonal a b = do
+  fileDiff <- fromToFilesShort (file a, file b)
+  fmap (filewiseToShortDiagonal fileDiff . direction)
+    (maybeIf
+      ((count fileDiff ==).count)
+      (fromToRanks (rank a, rank b)))
+filewiseToLongDiagonal :: LinearVec FilewiseDirection -> LinearVec DiagonalDirection
+filewiseToLongDiagonal (LinearVec f fileCount) =
+  LinearVec (DiagonalDirection Inwards (rever f)) (positiveSubstractCount (fromJust $ countFromPositiveInteger (5+5+1)) fileCount)
+fileDistance :: (File,File) -> Maybe Count
+fileDistance = fmap count . fromToFilesShort
+fileCoorDistance :: (Pos,Pos) -> Maybe Count
+fileCoorDistance = fileDistance . mapHomoTuple2 file
+fromToCoorFilesShort :: (Pos,Pos) -> Maybe (LinearVec FilewiseDirection)
+fromToCoorFilesShort = fromToFilesShort . mapHomoTuple2 file
+fromToCoorRanks :: (Pos,Pos) -> Maybe (LinearVec RankwiseDirection)
+fromToCoorRanks = fromToRanks. mapHomoTuple2 rank
+rankDistance :: (Rank, Rank) -> Maybe Count
+rankDistance = fmap count . fromToRanks
+rankDistanceFromMostOuter :: Rank -> Maybe Count
+rankDistanceFromMostOuter = fmap count . curry fromToRanks MostOuter
+sumOfRankDistancesFromMostOuter :: (Rank, Rank) -> Maybe Count
+sumOfRankDistancesFromMostOuter =
+  sumMaybeCountPair . mapHomoTuple2 rankDistanceFromMostOuter
+sumOfRankCoorDistancesFromMostOuter :: (Pos,Pos) -> Maybe Count
+sumOfRankCoorDistancesFromMostOuter =
+  sumMaybeCountPair . mapHomoTuple2 (rankDistanceFromMostOuter.rank)
+isFilewiseDistanceSameAsSumOfRanksDistancesFromMostOuter :: (Pos,Pos) -> Bool
+isFilewiseDistanceSameAsSumOfRanksDistancesFromMostOuter x =
+  maybe False (uncurry (==)) $ bothMaybe (fileCoorDistance x, sumOfRankCoorDistancesFromMostOuter x)
+fromToLongDiagonal :: Pos -> Pos -> Maybe (LinearVec DiagonalDirection)
+-- fromToLongDiagonal a b = do
+--   fileDiff <- fromToFilesShort (file a) (file b)
+--   rankSum <- sumCountPair (mapHomoTuple2 ((fmap count).(fromToRank MostOuter).rank) (a,b))
+--   if (rankSum == (count fileDiff)) then (filewiseToLongDiagonal fileDiff) else Nothing
+fromToLongDiagonal a b
+  | isFilewiseDistanceSameAsSumOfRanksDistancesFromMostOuter (a,b)
+    = fmap filewiseToLongDiagonal (fromToCoorFilesShort (a,b))
+  | otherwise = Nothing
+fromToDiagonals :: Pos -> Pos -> (Maybe (LinearVec DiagonalDirection), Maybe (LinearVec DiagonalDirection))
+fromToDiagonals a b = (fromToShortDiagonal a b, fromToLongDiagonal a b)
+fromToDiagonal :: Pos -> Pos -> [LinearVec DiagonalDirection]
+fromToDiagonal a b = let s = fromToDiagonals a b in uncurry (++) (mapHomoTuple2 maybeToList s)
