@@ -1,4 +1,7 @@
-{-# Language DuplicateRecordFields,GADTs,RankNTypes,DeriveDataTypeable,ScopedTypeVariables,ExistentialQuantification #-}
+{-# Language DuplicateRecordFields,GADTs,RankNTypes,DeriveDataTypeable,ScopedTypeVariables,ExistentialQuantification,
+             LiberalTypeSynonyms,NamedFieldPuns,RecordWildCards,TypeFamilies,PatternSynonyms,FunctionalDependencies,
+             FlexibleInstances,InstanceSigs,TypeFamilyDependencies,TypeInType,ConstraintKinds,KindSignatures,
+             TypeApplications,ImplicitParams,ImpredicativeTypes,PartialTypeSignatures,NamedWildCards #-}
 module ThreeManChess.Engine.Possibilities where
 
 import Data.Data
