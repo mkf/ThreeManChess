@@ -1,6 +1,6 @@
 {-# Language DuplicateRecordFields,GADTs,RankNTypes,DeriveDataTypeable,ScopedTypeVariables,ExistentialQuantification,
              LiberalTypeSynonyms,NamedFieldPuns,RecordWildCards,TypeFamilies,PatternSynonyms,FunctionalDependencies,
-             FlexibleInstances,InstanceSigs,TypeFamilyDependencies,TypeInType,ConstraintKinds,KindSignatures,
+             FlexibleInstances,InstanceSigs,TypeFamilyDependencies,DataKinds,PolyKinds,ConstraintKinds,KindSignatures,
              TypeApplications,ImplicitParams,ImpredicativeTypes,PartialTypeSignatures,NamedWildCards #-}
 module ThreeManChess.Engine.Possibilities where
 
@@ -388,3 +388,6 @@ fromToDiagonals :: Pos -> Pos -> (Maybe (LinearVec DiagonalDirection), Maybe (Li
 fromToDiagonals a b = (fromToShortDiagonal a b, fromToLongDiagonal a b)
 fromToDiagonal :: Pos -> Pos -> [LinearVec DiagonalDirection]
 fromToDiagonal a b = let s = fromToDiagonals a b in uncurry (++) (mapHomoTuple2 maybeToList s)
+fromToLinear :: Pos -> Pos -> [LinearVecC]
+fromToLinear a b = fmap (\(MkStraightVecC t) -> (MkLinearVecC t)) (fromToStraight a b) ++
+                   fmap MkLinearVecC (fromToDiagonal a b)
