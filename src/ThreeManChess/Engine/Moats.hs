@@ -42,3 +42,8 @@ withSetDirec z Minuswards x c = withSetDirec z Pluswards x (prev c)
 withSetBetween :: BridgeState -> MoatsState -> (Color,Color) -> MoatsState
 withSetBetween z x (a,b) | b == next a = withSetDirec z Pluswards x a
                          | otherwise = withSetDirec z Minuswards x a
+
+allBridged :: MoatsState
+allBridged = (Bridged, Bridged, Bridged)
+noBridges :: MoatsState
+noBridges = (Unbridged, Unbridged, Unbridged)

@@ -17,7 +17,7 @@ segmEightStarting (SegmentEight (SegmentQuarter x y) z)
   | x==SecondHalf && y==FirstHalf && z==FirstHalf = King
   | otherwise = undefined
 
-start :: GameBoard
-start (SecondOuter, File c _) = Just $ Figure InwardPawn c
-start (MostOuter, File c s) = Just $ Figure (segmEightStarting s) c
-start _ = Nothing
+startBoard :: GameBoard
+startBoard (SecondOuter, File c _) = Just $ Figure InwardPawn c
+startBoard (MostOuter, File c s) = Just $ Figure (segmEightStarting s) c
+startBoard _ = Nothing
