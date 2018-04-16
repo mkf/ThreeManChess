@@ -1,6 +1,7 @@
 module ThreeManChess.Engine.GameBoard where
 
 import ThreeManChess.Engine.Pos
+import ThreeManChess.Engine.PosIterator
 import ThreeManChess.Engine.Board
 import ThreeManChess.Engine.Figure
 import ThreeManChess.Engine.FigType
@@ -21,3 +22,6 @@ startBoard :: GameBoard
 startBoard (SecondOuter, File c _) = Just $ Figure InwardPawn c
 startBoard (MostOuter, File c s) = Just $ Figure (segmEightStarting s) c
 startBoard _ = Nothing
+
+whereIsFig :: Figure -> GameBoard -> [Pos]
+whereIsFig what board = filter (maybe False (what ==) . board) allPos
