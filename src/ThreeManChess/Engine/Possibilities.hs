@@ -4,6 +4,7 @@
              TypeApplications,ImplicitParams,ImpredicativeTypes,PartialTypeSignatures,NamedWildCards #-}
 module ThreeManChess.Engine.Possibilities where
 
+import Control.Exception
 import Data.Data
 import Data.Maybe
 import ThreeManChess.Engine.Pos
@@ -153,13 +154,21 @@ class (Eq a-- , Read a, Show a
       ) => Vec a where
   reverMaybe :: a -> Maybe a
   add :: Pos -> a -> Maybe Pos
+  emptiesFrom :: Pos -> a -> Maybe [Pos]
 -- data VecC = forall a . Vec a => MkVecC a
 data VecC where
   MkVecC :: Vec a => a -> VecC
 class (Vec a, Reversable a) => ReversableVec a
 -- instance (Reversable a) => Vec (ReversableVec a) where
 --   reverMaybe x = Just $ rever x
+passTimes :: (a -> a) -> Count -> a -> a
+passTimes f Once a = f a
+passTimes f (OnceMore c) a = passTimes f c (f a)
 data Castling = QueensideCastling | KingsideCastling -- deriving (Vec)
+emptiesForCastling :: Castling -> [SegmentEight]
+emptiesForCastling KingsideCastling = [fromJust $ plusEight kfm, passTimes (fromJust.plusEight) (OnceMore Once) kfm]
+emptiesForCastling QueensideCastling = [fromJust $ minusEight kfm, passTimes (fromJust.minusEight) (OnceMore Once) kfm,
+                                        passTimes (fromJust.minusEight) (OnceMore $ OnceMore Once) kfm]
 instance Eq Castling where
   QueensideCastling == QueensideCastling = True
   QueensideCastling == KingsideCastling = False
@@ -179,13 +188,22 @@ instance Vec Castling where
                                 segmentQuarter=SegmentQuarter {
                                     half=SecondHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}})
   add _ KingsideCastling = undefined
+  emptiesFrom from v = Just $ assert ( colorSegmFile (file from) == kfm )
+                       (assert ( rank from == MostOuter ) (fmap (\x -> (MostOuter,File (segmColor $ file from) x))
+                                                            (emptiesForCastling v)))
 data PawnJumpByTwo = PawnJumpByTwo --deriving (Vec)
+enPassantField :: File -> Pos
+enPassantField f = (rankFromInt 2, f)
+enPassantFieldPos :: Pos -> Maybe Pos
+enPassantFieldPos (SecondOuter,f) = Just $ enPassantField f
+enPassantFieldPos _ = Nothing
 instance Eq PawnJumpByTwo where
   PawnJumpByTwo == PawnJumpByTwo = True
 instance Vec PawnJumpByTwo where
   reverMaybe PawnJumpByTwo = Nothing
   add (SecondOuter, f) PawnJumpByTwo = Just (MiddleInner, f)
   add _ PawnJumpByTwo = Nothing
+  emptiesFrom from PawnJumpByTwo = do { e <- enPassantFieldPos from; t <- add from PawnJumpByTwo; Just [e, t] }
 -- data (LinearDirection a) => LinearVec a = LinearVec a Count --deriving (Ord)
 data LinearVec a where
   LinearVec :: LinearDirection a => a -> Count -> LinearVec a
@@ -209,6 +227,11 @@ instance (LinearDirection a) => Vec (LinearVec a) where
   reverMaybe x = Just $ rever x
   add p (LinearVec d Once) = addOne d p
   add p m = foldl _addMaybe (Just p) (unitsInvolRank m (rank p))
+  emptiesFrom _ (LinearVec _ Once) = Just []
+  emptiesFrom p (LinearVec d c) =  addOne d p >>= (\pp -> Just $ pp:_emptiesFromMust pp (LinearVec d c))
+_emptiesFromMust :: (LinearDirection a) => Pos -> LinearVec a -> [Pos]
+_emptiesFromMust _ (LinearVec _ Once) = []
+_emptiesFromMust pp (LinearVec d c) = fromJust $ emptiesFrom pp (fromJust (tailInvolRank (LinearVec d c)) (rank pp))
 _addMaybe :: (LinearDirection a) => Maybe Pos -> LinearVec a -> Maybe Pos
 _addMaybe p m = do { jp <- p;
                      add jp m;}
@@ -220,6 +243,7 @@ instance ReversableVec KnightVec
 instance Reversable KnightVec where
   rever (KnightVec r f orient) = KnightVec (rever r) (rever f) orient
 instance Vec KnightVec where
+  emptiesFrom _ _ = Just []
   reverMaybe x = Just $ rever x
 -- add KnightMove {rankwise=r, filewise=f, twice=t} x =
 --   do { fl <- add UnitStraightMove {direction=case t of Rankwise -> r; Filewise -> f} x;
@@ -273,6 +297,9 @@ units x = let
 -- unitsInvolRank :: LinearMove -> Rank -> [UnitLinearMove]
 unitsInvolRank :: (LinearDirection a) => LinearVec a -> Rank -> [LinearVec a]
 unitsInvolRank x = either id const $ units x
+tailInvolRank :: (LinearDirection a) => LinearVec a -> Maybe (Rank -> LinearVec a)
+-- tailInvolRank x = do { f <- tailRankInvol x; return $ either id const f }
+tailInvolRank x = either id const <$> tailRankInvol x
 -- fromToVecsByFig :: FigType -> Pos -> Pos -> [Vec a]
 -- fromToVecsByFig Queen a b = (fromToVecs Rook a b) ++ (fromToVecs Bishop a b)
 -- fromToVecsByFig Rook

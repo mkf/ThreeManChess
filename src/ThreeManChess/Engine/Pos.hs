@@ -73,6 +73,29 @@ plus File { segmColor=c, colorSegmFile=f} =
                          SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=FirstHalf}
                        _ -> error "case did not work"
 }
+mirrorHalf :: SegmentHalf -> SegmentHalf
+mirrorHalf FirstHalf = SecondHalf
+mirrorHalf SecondHalf = FirstHalf
+plusHalf :: SegmentHalf -> Maybe SegmentHalf
+plusHalf FirstHalf = Just SecondHalf
+plusHalf SecondHalf = Nothing
+minusHalf :: SegmentHalf -> Maybe SegmentHalf
+minusHalf SecondHalf = Just FirstHalf
+minusHalf FirstHalf = Nothing
+mirrorQuarter :: SegmentQuarter -> SegmentQuarter
+mirrorQuarter (SegmentQuarter a b) = SegmentQuarter (mirrorHalf a) (mirrorHalf b)
+mirrorEight :: SegmentEight -> SegmentEight
+mirrorEight (SegmentEight a b) = SegmentEight (mirrorQuarter a) (mirrorHalf b)
+plusQuarter :: SegmentQuarter -> Maybe SegmentQuarter
+plusQuarter (SegmentQuarter x FirstHalf) = Just $ SegmentQuarter x SecondHalf
+plusQuarter (SegmentQuarter a SecondHalf) = do { b <- plusHalf a; Just $ SegmentQuarter b FirstHalf }
+minusQuarter :: SegmentQuarter -> Maybe SegmentQuarter
+minusQuarter = fmap mirrorQuarter . plusQuarter.mirrorQuarter
+plusEight :: SegmentEight -> Maybe SegmentEight
+plusEight (SegmentEight x FirstHalf) = Just $ SegmentEight x SecondHalf
+plusEight (SegmentEight a SecondHalf) = do { b <- plusQuarter a; Just $ SegmentEight b FirstHalf }
+minusEight :: SegmentEight -> Maybe SegmentEight
+minusEight = fmap mirrorEight . plusEight.mirrorEight
 inw :: Rank -> Rank
 inw MostOuter = SecondOuter
 inw SecondOuter = MiddleOuter
@@ -134,3 +157,6 @@ rank :: Pos -> Rank
 rank (r, _) = r
 file :: Pos -> File
 file (_, f) = f
+
+kfm :: SegmentEight
+kfm = SegmentEight { segmentQuarter = SegmentQuarter { half = SecondHalf, halfQuarter = FirstHalf }, quarterHalf = FirstHalf }
