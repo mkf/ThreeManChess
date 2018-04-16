@@ -1,7 +1,7 @@
 module ThreeManChess.Engine.GameBoard where
 
 import ThreeManChess.Engine.Pos
-import ThreeManChess.Engine.PosIterator
+import ThreeManChess.Engine.PosIterator (allPos)
 import ThreeManChess.Engine.Board
 import ThreeManChess.Engine.Figure
 import ThreeManChess.Engine.FigType
