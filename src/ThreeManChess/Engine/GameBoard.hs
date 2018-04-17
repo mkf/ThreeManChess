@@ -23,5 +23,8 @@ startBoard (SecondOuter, File c _) = Just $ Figure InwardPawn c
 startBoard (MostOuter, File c s) = Just $ Figure (segmEightStarting s) c
 startBoard _ = Nothing
 
+whereIsMaybeFig :: Maybe Figure -> GameBoard -> [Pos]
+whereIsMaybeFig what board = filter ((what ==) . board) allPos
 whereIsFig :: Figure -> GameBoard -> [Pos]
-whereIsFig what board = filter (maybe False (what ==) . board) allPos
+-- whereIsFig what board = filter (maybe False (what ==) . board) allPos
+whereIsFig what = whereIsMaybeFig (Just what)
