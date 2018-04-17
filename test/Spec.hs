@@ -5,11 +5,11 @@ import Data.Monoid
 import Control.Monad
 -- import Utils
 -- import Test.QuickCheck
-
-trueTest :: Assertion
-trueTest = True @=? True
+import qualified ThreeManChess.Engine.StartGameBoardTest
 
 main :: IO ()
 main = defaultMainWithOpts
-       [testCase "trueTest" trueTest]
+       (
+         ThreeManChess.Engine.StartGameBoardTest.tests
+       )
        mempty
