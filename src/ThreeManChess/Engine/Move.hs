@@ -5,6 +5,7 @@ module ThreeManChess.Engine.Move where
 import ThreeManChess.Engine.Pos
 import ThreeManChess.Engine.Possibilities
 import ThreeManChess.Engine.FigType
+import ThreeManChess.Engine.GameState
 
 data (Vec a) => BoundVec a = BoundVec a Pos
 
@@ -24,7 +25,16 @@ type family Move (f :: FigType) where
   Move 'InwardPawn = JustPawnMove
   Move 'OutwardPawn = PossiblyPromotedPawnMove
 
-type BoundMove f = (Move f, Pos)
+data MoveT where
+  MkQueenMove :: Move 'Queen -> MoveT
+  MkKingMove :: Move 'King -> MoveT
+  MkRookMove :: Move 'Rook -> MoveT
+  MkBishopMove :: Move 'Bishop -> MoveT
+  MkKnightMove :: Move 'Knight -> MoveT
+  MkInwardPawnMove :: Move 'InwardPawn -> MoveT
+  MkOutwardPawnMove :: Move 'OutwardPawn -> MoveT
 
--- data StateMove where
---   StateMove :: (f :: FigType) -> BoundMove f
+type BoundMove f = (Move f, Pos)
+type BoundMoveT = (MoveT, Pos)
+
+type StateMove = (MoveT, GameState)
