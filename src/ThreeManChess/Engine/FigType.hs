@@ -5,6 +5,10 @@ import Data.Data
 -- import Data.Set as Set
 
 data FigType = InwardPawn | OutwardPawn | Rook | Knight | Bishop | King | Queen deriving (Eq, Show, Read, Data, Typeable)
+
+class FigTypeClass f
+instance FigTypeClass FigType
+
 -- figTypeSet :: Set.Set FigType
 -- figTypeSet = Set.fromList [Pawn, Rook, Knight, Bishop, King, Queen]
 figTypes :: [FigType]

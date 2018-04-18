@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, DataKinds, ExistentialQuantification, GADTs, KindSignatures #-}
+{-# LANGUAGE TypeFamilies, DataKinds, ExistentialQuantification, GADTs #-}
 
 module ThreeManChess.Engine.Move where
 
@@ -25,3 +25,6 @@ type family Move (f :: FigType) where
   Move 'OutwardPawn = PossiblyPromotedPawnMove
 
 type BoundMove f = (Move f, Pos)
+
+-- data StateMove where
+--   StateMove :: (f :: FigType) -> BoundMove f
