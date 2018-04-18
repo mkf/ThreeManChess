@@ -23,3 +23,5 @@ type family Move (f :: FigType) where
   Move 'Knight = KnightVec
   Move 'InwardPawn = JustPawnMove
   Move 'OutwardPawn = PossiblyPromotedPawnMove
+
+type BoundMove f = (Move f, Pos)
