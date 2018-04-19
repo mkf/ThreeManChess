@@ -158,6 +158,24 @@ class (Eq a-- , Read a, Show a
 -- data VecC = forall a . Vec a => MkVecC a
 data VecC where
   MkVecC :: Vec a => a -> VecC
+data VecCC where
+  MkLinearVecCC :: LinearDirection a => LinearVec a -> VecCC
+--  MkStraightVecCC :: StraightDirection a => LinearVec a -> VecCC
+  MkKnightVecCC :: KnightVec -> VecCC
+  MkCastlingVecCC :: Castling -> VecCC
+  MkPawnJumpByTwoVecCC :: PawnJumpByTwo -> VecCC
+
+-- unboxVecCCLinear :: (LinearDirection a) => ('MkLinearVecCC (LinearVec a)) -> Maybe (LinearVec a)
+-- unboxVecCCLinear (MkLinearVecCC a) = Just a
+data VecEBC where
+  MkDiagonalVecEBC :: LinearVec DiagonalDirection -> VecEBC
+  MkRankwiseVecEBC :: LinearVec RankwiseDirection -> VecEBC
+  MkFilewiseVecEBC :: LinearVec FilewiseDirection -> VecEBC
+  MkKnightVecEBC :: KnightVec -> VecEBC
+  MkCastlingVecEBC :: Castling -> VecEBC
+  MkPawnJumpByTwoVecEBC :: PawnJumpByTwo -> VecEBC
+
+
 class (Vec a, Reversable a) => ReversableVec a
 -- instance (Reversable a) => Vec (ReversableVec a) where
 --   reverMaybe x = Just $ rever x
@@ -266,6 +284,13 @@ fromToKnight a b = filter (maybe False (b==) . add a) allPossibleKnightVecs
 -- class (StraightDirection a) => StraightVec a
 -- instance (StraightDirection a) => StraightVec (LinearVec a)
 -- type (StraightDirection a) => StraightVec a = LinearVec a
+
+mkveccFromLinearvecc :: LinearVecC -> VecC
+mkveccFromLinearvecc (MkLinearVecC a) = MkVecC a
+-- linearVecUnboxingFromVecc :: (LinearDirection a) => VecC -> Maybe (LinearVec a)
+-- linearVecUnboxingFromVecc (MkVecC (LinearVec a b)) = Just $ LinearVec a b
+-- mklinearveccFromVecc :: (Linear)
+-- mklinearveccFromVecc (MkVecC x) = MkLinearVecC x
 
 -- type StraightMove = LinearMove { direction :: StraightDirection }
 -- type DiagonalMove = LinearMove { direction :: DiagonalDirection }
