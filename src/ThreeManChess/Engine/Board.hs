@@ -89,3 +89,13 @@ _ofBoardTRankT (_,_,_,_,x,_) SecondInner = x
 _ofBoardTRankT (_,_,_,_,_,x) MostInner = x
 _ofBoardT :: BoardT a -> Board a
 _ofBoardT x (r, f) = _ofRankT (_ofBoardTRankT x r) f
+
+data BoardSingleChange a = MoveFromToOverwriting Pos Pos | DoubleMoveFromToOverwriting (Pos,Pos) (Pos,Pos) |
+                           MoveFromToOverwritingWithOtherDisappear (Pos,Pos) Pos | Replacement Pos a
+performSingleChange :: BoardSingleChange a -> Board a -> Board a
+performSingleChange (MoveFromToOverwriting a b) f = put (swap f a b) a Nothing
+performSingleChange (DoubleMoveFromToOverwriting a b) f = performSingleChanges [uncurry MoveFromToOverwriting a, uncurry MoveFromToOverwriting b] f
+performSingleChange (MoveFromToOverwritingWithOtherDisappear a b) f = put (performSingleChange (uncurry MoveFromToOverwriting a) f) b Nothing
+performSingleChange (Replacement w a) f = put f w (Just a)
+performSingleChanges :: [BoardSingleChange a] -> Board a -> Board a
+performSingleChanges xs b = foldl (flip performSingleChange) b xs
