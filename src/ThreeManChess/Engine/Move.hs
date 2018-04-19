@@ -122,6 +122,9 @@ from :: (a,Pos) -> Pos
 from = snd
 to :: BoundMoveT -> Maybe Pos
 to (m,f) = addEBC f $ vectorFromMoveT m
+checkIfPromotionPresenceIsOK :: BoundMove 'OutwardPawn -> Bool
+checkIfPromotionPresenceIsOK (_,(SecondOuter,_)) = True
+checkIfPromotionPresenceIsOK _ = False
 
 -- boardSimplyAfter :: GameBoard -> BoundMoveT
 
