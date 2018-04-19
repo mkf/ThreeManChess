@@ -8,6 +8,7 @@ import ThreeManChess.Engine.Possibilities
 import ThreeManChess.Engine.FigType
 import ThreeManChess.Engine.GameState
 import ThreeManChess.Engine.GameBoard
+import ThreeManChess.Engine.Board
 
 data (Vec a) => BoundVec a = BoundVec a Pos
 
@@ -74,30 +75,30 @@ vecsFromToWith OutwardPawn a b _
 
 -- moveFromVecWith :: FigType -> VecC -> Either (Maybe Promotion -> MoveT) MoveT
 -- moveFromVecWith Queen (MkVecC (LinearVec a b)) = Right $ MkQueenMove (MkLinearVecC a b)
-moveFromVecWith :: FigType -> VecEBC -> Either (Maybe Promotion -> MoveT) MoveT
-moveFromVecWith Queen (MkDiagonalVecEBC a) = Right $ MkQueenMove (MkLinearVecC a)
-moveFromVecWith Queen (MkRankwiseVecEBC a) = Right $ MkQueenMove (MkLinearVecC a)
-moveFromVecWith Queen (MkFilewiseVecEBC a) = Right $ MkQueenMove (MkLinearVecC a)
-moveFromVecWith Queen _ = undefined
-moveFromVecWith King (MkDiagonalVecEBC (LinearVec a Once)) = Right $ MkKingMove (AloneDiagonally a)
-moveFromVecWith King (MkRankwiseVecEBC (LinearVec a Once)) = Right $ MkKingMove (AloneRankwise a)
-moveFromVecWith King (MkFilewiseVecEBC (LinearVec a Once)) = Right $ MkKingMove (AloneFilewise a)
-moveFromVecWith King (MkCastlingVecEBC a) = Right $ MkKingMove $ NotAlone a
-moveFromVecWith King _ = undefined
-moveFromVecWith Rook (MkRankwiseVecEBC a) = Right $ MkRookMove (MkStraightVecC a)
-moveFromVecWith Rook (MkFilewiseVecEBC a) = Right $ MkRookMove (MkStraightVecC a)
-moveFromVecWith Rook _ = undefined
-moveFromVecWith Knight (MkKnightVecEBC a) = Right $ MkKnightMove a
-moveFromVecWith Knight _ = undefined
-moveFromVecWith Bishop (MkDiagonalVecEBC a) = Right $ MkBishopMove a
-moveFromVecWith Bishop _ = undefined
-moveFromVecWith InwardPawn (MkRankwiseVecEBC (LinearVec Inwards Once)) = Right $ MkInwardPawnMove $ Walk Forward
-moveFromVecWith InwardPawn (MkDiagonalVecEBC (LinearVec (DiagonalDirection Inwards a) Once)) = Right $ MkInwardPawnMove $ Walk $ Capturing a
-moveFromVecWith InwardPawn (MkPawnJumpByTwoVecEBC PawnJumpByTwo) = Right $ MkInwardPawnMove Jump
-moveFromVecWith InwardPawn _ = undefined
-moveFromVecWith OutwardPawn (MkRankwiseVecEBC (LinearVec Outwards Once)) = Left (\x -> MkOutwardPawnMove (Forward, x))
-moveFromVecWith OutwardPawn (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a) Once)) = Left (\x -> MkOutwardPawnMove (Capturing a, x))
-moveFromVecWith OutwardPawn _ = undefined
+moveFromVecWith :: FigType -> VecEBC -> Maybe (Either (Maybe Promotion -> MoveT) MoveT)
+moveFromVecWith Queen (MkDiagonalVecEBC a) = Just $ Right $ MkQueenMove (MkLinearVecC a)
+moveFromVecWith Queen (MkRankwiseVecEBC a) = Just $ Right $ MkQueenMove (MkLinearVecC a)
+moveFromVecWith Queen (MkFilewiseVecEBC a) = Just $ Right $ MkQueenMove (MkLinearVecC a)
+moveFromVecWith Queen _ = Nothing
+moveFromVecWith King (MkDiagonalVecEBC (LinearVec a Once)) = Just $ Right $ MkKingMove (AloneDiagonally a)
+moveFromVecWith King (MkRankwiseVecEBC (LinearVec a Once)) = Just $ Right $ MkKingMove (AloneRankwise a)
+moveFromVecWith King (MkFilewiseVecEBC (LinearVec a Once)) = Just $ Right $ MkKingMove (AloneFilewise a)
+moveFromVecWith King (MkCastlingVecEBC a) = Just $ Right $ MkKingMove $ NotAlone a
+moveFromVecWith King _ = Nothing
+moveFromVecWith Rook (MkRankwiseVecEBC a) = Just $ Right $ MkRookMove (MkStraightVecC a)
+moveFromVecWith Rook (MkFilewiseVecEBC a) = Just $ Right $ MkRookMove (MkStraightVecC a)
+moveFromVecWith Rook _ = Nothing
+moveFromVecWith Knight (MkKnightVecEBC a) = Just $ Right $ MkKnightMove a
+moveFromVecWith Knight _ = Nothing
+moveFromVecWith Bishop (MkDiagonalVecEBC a) = Just $ Right $ MkBishopMove a
+moveFromVecWith Bishop _ = Nothing
+moveFromVecWith InwardPawn (MkRankwiseVecEBC (LinearVec Inwards Once)) = Just $ Right $ MkInwardPawnMove $ Walk Forward
+moveFromVecWith InwardPawn (MkDiagonalVecEBC (LinearVec (DiagonalDirection Inwards a) Once)) = Just $ Right $ MkInwardPawnMove $ Walk $ Capturing a
+moveFromVecWith InwardPawn (MkPawnJumpByTwoVecEBC PawnJumpByTwo) = Just $ Right $ MkInwardPawnMove Jump
+moveFromVecWith InwardPawn _ = Nothing
+moveFromVecWith OutwardPawn (MkRankwiseVecEBC (LinearVec Outwards Once)) = Just $ Left (\x -> MkOutwardPawnMove (Forward, x))
+moveFromVecWith OutwardPawn (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a) Once)) = Just $ Left (\x -> MkOutwardPawnMove (Capturing a, x))
+moveFromVecWith OutwardPawn _ = Nothing
 
 data MoveT where
   MkQueenMove :: Move 'Queen -> MoveT
@@ -107,6 +108,8 @@ data MoveT where
   MkKnightMove :: Move 'Knight -> MoveT
   MkInwardPawnMove :: Move 'InwardPawn -> MoveT
   MkOutwardPawnMove :: Move 'OutwardPawn -> MoveT
+
+
 
 -- encapsulateMoveType :: FigType -> Move f -> MoveT
 -- encapsulateMoveType Queen x = MkQueenMove x
