@@ -254,6 +254,13 @@ instance Vec KnightVec where
          x <- (case t of Rankwise -> addOne r; Filewise -> addOne f) x;
          return x;}
 
+allPossibleKnightVecs :: [KnightVec]
+allPossibleKnightVecs = [KnightVec Inwards Pluswards Rankwise, KnightVec Inwards Pluswards Filewise,
+                         KnightVec Inwards Minuswards Rankwise, KnightVec Inwards Minuswards Filewise,
+                         KnightVec Outwards Pluswards Rankwise, KnightVec Outwards Pluswards Filewise,
+                         KnightVec Outwards Minuswards Rankwise, KnightVec Outwards Minuswards Filewise]
+fromToKnight :: Pos -> Pos -> [KnightVec]
+fromToKnight a b = filter (maybe False (b==) . add a) allPossibleKnightVecs
 -- add LinearMove m p = foldl add p $ unitsInvolRank m
 -- class StraightVec
 -- class (StraightDirection a) => StraightVec a

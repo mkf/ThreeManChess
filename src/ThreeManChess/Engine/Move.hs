@@ -3,6 +3,7 @@
 module ThreeManChess.Engine.Move where
 
 import ThreeManChess.Engine.Pos
+import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.Possibilities
 import ThreeManChess.Engine.FigType
 import ThreeManChess.Engine.GameState
@@ -39,6 +40,29 @@ vectorFromMoveT (MkInwardPawnMove Forward) = MkVecC $ LinearVec Inwards Once
 vectorFromMoveT (MkInwardPawnMove (Capturing x)) = MkVecC $ LinearVec (DiagonalDirection Inwards x) Once
 vectorFromMoveT (MkOutwardPawnMove (Forward,_)) = MkVecC $ LinearVec Outwards Once
 vectorFromMoveT (MkOutwardPawnMove (Capturing x,_)) = MkVecC $ LinearVec (DiagonalDirection Outwards x) Once
+
+vecsFromToWith :: FigType -> Pos -> Pos -> Color -> [VecC]
+vecsFromToWith Queen a b _ = fmap (\(MkLinearVecC x) -> (MkVecC x)) (fromToLinear a b)
+vecsFromToWith King a b col
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) = [MkVecC $ flip LinearVec Once $ DiagonalDirection Inwards Pluswards]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) = [MkVecC $ flip LinearVec Once $ DiagonalDirection Inwards Minuswards]
+  | maybe False (b==) (addOne (DiagonalDirection Outwards Pluswards) a) = [MkVecC $ flip LinearVec Once $ DiagonalDirection Outwards Pluswards]
+  | maybe False (b==) (addOne (DiagonalDirection Outwards Minuswards) a) = [MkVecC $ flip LinearVec Once $ DiagonalDirection Outwards Minuswards]
+  | maybe False (b==) (addOne Pluswards a) = [MkVecC $ LinearVec Pluswards Once]
+  | maybe False (b==) (addOne Minuswards a) = [MkVecC $ LinearVec Minuswards Once]
+  | maybe False (b==) (addOne Inwards a) = [MkVecC $ LinearVec Inwards Once]
+  | maybe False (b==) (addOne Outwards a) = [MkVecC $ LinearVec Outwards Once]
+  | a==(MostOuter, File col kfm) && maybe False (b==) (add a QueensideCastling) = [MkVecC QueensideCastling]
+  | a==(MostOuter, File col kfm) && maybe False (b==) (add a KingsideCastling) = [MkVecC KingsideCastling]
+  | otherwise = []
+vecsFromToWith Rook a b _ = fmap (\(MkStraightVecC x) -> (MkVecC x)) (fromToStraight a b)
+vecsFromToWith Bishop a b _ = MkVecC <$> fromToDiagonal a b
+vecsFromToWith Knight a b _ = MkVecC <$> fromToKnight a b
+vecsFromToWith InwardPawn a b _
+  | maybe False (b==) (addOne Inwards a) = [MkVecC $ LinearVec Inwards Once]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) = [MkVecC $ LinearVec (DiagonalDirection Inwards Pluswards) Once]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) = [MkVecC $ LinearVec (DiagonalDirection Inwards Minuswards) Once]
+  | otherwise = []
 
 data MoveT where
   MkQueenMove :: Move 'Queen -> MoveT
