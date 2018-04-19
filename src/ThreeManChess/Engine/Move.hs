@@ -122,7 +122,13 @@ data MoveT where
 
 type BoundMove f = (Move f, Pos)
 type BoundMoveT = (MoveT, Pos)
+from :: (a,Pos) -> Pos
+from = snd
+-- to :: BoundMoveT -> Maybe Pos
+-- to (m,from) =
+--   let (MkVecC a) = vectorFromMoveT m in
+--     add from a
 
 -- boardSimplyAfter :: GameBoard -> BoundMoveT
 
-data StateMove = StateMove {move :: MoveT, before :: GameState}
+data StateMove = StateMove {move :: BoundMoveT, before :: GameState}
