@@ -155,6 +155,15 @@ class (Eq a-- , Read a, Show a
   reverMaybe :: a -> Maybe a
   add :: Pos -> a -> Maybe Pos
   emptiesFrom :: Pos -> a -> Maybe [Pos]
+class (Eq a-- , Read a, Show a
+      ) => InterfaceVecEBC a where
+  reverMaybeEBC :: a -> Maybe a
+  addEBC :: Pos -> a -> Maybe Pos
+  flipAddEBC :: a -> Pos -> Maybe Pos
+  addEBC = flip flipAddEBC
+  flipEmptiesFromEBC :: a -> Pos -> Maybe [Pos]
+  emptiesFromEBC :: Pos -> a -> Maybe [Pos]
+  emptiesFromEBC = flip flipEmptiesFromEBC
 -- data VecC = forall a . Vec a => MkVecC a
 data VecC where
   MkVecC :: Vec a => a -> VecC
@@ -178,6 +187,47 @@ data StraightVecEBC where
 data LinearVecEBC where
   MkDiagonalVecEBC :: LinearVec DiagonalDirection -> LinearVecEBC
   MkStraightVecEBC :: StraightVecEBC -> LinearVecEBC
+instance InterfaceVecEBC StraightVecEBC where
+  reverMaybeEBC (MkRankwiseVecEBC x) = MkRankwiseVecEBC <$> reverMaybe x
+  reverMaybeEBC (MkFilewiseVecEBC x) = MkFilewiseVecEBC <$> reverMaybe x
+  flipAddEBC (MkRankwiseVecEBC x) = flip add x
+  flipAddEBC (MkFilewiseVecEBC x) = flip add x
+  flipEmptiesFromEBC (MkRankwiseVecEBC x) = flip emptiesFrom x
+  flipEmptiesFromEBC (MkFilewiseVecEBC x) = flip emptiesFrom x
+instance InterfaceVecEBC LinearVecEBC where
+  reverMaybeEBC (MkStraightVecEBC x) = MkStraightVecEBC <$> reverMaybeEBC x
+  reverMaybeEBC (MkDiagonalVecEBC x) = MkDiagonalVecEBC <$> reverMaybe x
+  flipAddEBC (MkStraightVecEBC x) = flipAddEBC x
+  flipAddEBC (MkDiagonalVecEBC x) = flip add x
+  flipEmptiesFromEBC (MkStraightVecEBC x) = flipEmptiesFromEBC x
+  flipEmptiesFromEBC (MkDiagonalVecEBC x) = flip emptiesFrom x
+instance InterfaceVecEBC VecEBC where
+  reverMaybeEBC (MkLinearVecEBC x) = MkLinearVecEBC <$> reverMaybeEBC x
+  reverMaybeEBC (MkKnightVecEBC x) = MkKnightVecEBC <$> reverMaybe x
+  reverMaybeEBC (MkCastlingVecEBC x) = MkCastlingVecEBC <$> reverMaybe x
+  reverMaybeEBC (MkPawnJumpByTwoVecEBC x) = MkPawnJumpByTwoVecEBC <$> reverMaybe x
+  flipAddEBC (MkLinearVecEBC x) = flipAddEBC x
+  flipAddEBC (MkKnightVecEBC x) = flip add x
+  flipAddEBC (MkCastlingVecEBC x) = flip add x
+  flipAddEBC (MkPawnJumpByTwoVecEBC x) = flip add x
+  flipEmptiesFromEBC (MkLinearVecEBC x) = flipEmptiesFromEBC x
+  flipEmptiesFromEBC (MkKnightVecEBC x) = flip emptiesFrom x
+  flipEmptiesFromEBC (MkCastlingVecEBC x) = flip emptiesFrom x
+  flipEmptiesFromEBC (MkPawnJumpByTwoVecEBC x) = flip emptiesFrom x
+instance Eq StraightVecEBC where
+  (MkRankwiseVecEBC x) == (MkRankwiseVecEBC y) = x==y
+  (MkFilewiseVecEBC x) == (MkFilewiseVecEBC y) = x==y
+  _ == _ = False
+instance Eq LinearVecEBC where
+  (MkDiagonalVecEBC x) == (MkDiagonalVecEBC y) = x==y
+  (MkStraightVecEBC x) == (MkStraightVecEBC y) = x==y
+  _ == _ = False
+instance Eq VecEBC where
+  (MkLinearVecEBC x) == (MkLinearVecEBC y) = x==y
+  (MkKnightVecEBC x) == (MkKnightVecEBC y) = x==y
+  (MkCastlingVecEBC x) == (MkCastlingVecEBC y) = x==y
+  (MkPawnJumpByTwoVecEBC x) == (MkPawnJumpByTwoVecEBC y) = x==y
+  _ == _ = False
 
 class (Vec a, Reversable a) => ReversableVec a
 -- instance (Reversable a) => Vec (ReversableVec a) where
