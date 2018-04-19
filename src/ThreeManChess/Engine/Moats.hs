@@ -47,3 +47,5 @@ allBridged :: MoatsState
 allBridged = (Bridged, Bridged, Bridged)
 noBridges :: MoatsState
 noBridges = (Unbridged, Unbridged, Unbridged)
+
+data CheckInitiatedThruMoatException
