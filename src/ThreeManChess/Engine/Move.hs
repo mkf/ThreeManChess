@@ -61,6 +61,6 @@ data MoveT where
 type BoundMove f = (Move f, Pos)
 type BoundMoveT = (MoveT, Pos)
 
--- boardSimplyAfter :: GameBoard -> BoundMove f
+-- boardSimplyAfter :: GameBoard -> BoundMoveT
 
 data StateMove = StateMove {move :: MoveT, before :: GameState}
