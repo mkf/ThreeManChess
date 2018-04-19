@@ -37,4 +37,4 @@ data MoveT where
 type BoundMove f = (Move f, Pos)
 type BoundMoveT = (MoveT, Pos)
 
-data StateMove = StateMove MoveT GameState
+data StateMove = StateMove {move :: MoveT, before :: GameState}
