@@ -126,5 +126,28 @@ to (m,f) = addEBC f $ vectorFromMoveT m
 -- boardSimplyAfter :: GameBoard -> BoundMoveT
 
 data StateMove = StateMove {move :: BoundMoveT, before :: GameState}
+
+--TODO not all of these must be boolean
+checkIfFigTypeOK :: StateMove -> Bool
+checkIfFigTypeOK _ = error "Not implemented TODO"
+checkIfFigColorOK :: StateMove -> Bool
+checkIfFigColorOK _ = error "Not implemented TODO"
+checkIfIsEnPassant :: StateMove -> Bool
+checkIfIsEnPassant _ = error "Not implemented TODO"
+checkIfEnPassantPossible :: StateMove -> Bool
+checkIfEnPassantPossible _ = error "Not implemented TODO"
+checkIfCapturing :: StateMove -> Bool
+checkIfCapturing _ = error "Not implemented TODO"
+checkIfCapturingOwnPiece :: StateMove -> Bool
+checkIfCapturingOwnPiece _ = error "Not implemented TODO"
+checkIfAllAreEmpties :: StateMove -> Bool
+checkIfAllAreEmpties _ = error "Not implemented TODO"
+checkCastlingImpossibility :: StateMove -> Bool
+checkCastlingImpossibility _ = error "Not implemented TODO"
+checkIfCapturingThruMoats :: StateMove -> Bool
+checkIfCapturingThruMoats _ = error "Not implemented TODO"
+checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
+checkIfWeArePassingAnUnbridgedMoat _ = error "Not implemented TODO"
+
 -- afterFirstStageHelper :: StateMove -> Maybe GameState
 -- afterFirstStageHelper (StateMove (MkQueenMove x, f) bef) = Nothing
