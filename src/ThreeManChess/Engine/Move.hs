@@ -37,4 +37,4 @@ data MoveT where
 type BoundMove f = (Move f, Pos)
 type BoundMoveT = (MoveT, Pos)
 
-type StateMove = (MoveT, GameState)
+data StateMove = StateMove MoveT GameState
