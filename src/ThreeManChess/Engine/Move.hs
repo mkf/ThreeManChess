@@ -128,3 +128,5 @@ from = snd
 -- boardSimplyAfter :: GameBoard -> BoundMoveT
 
 data StateMove = StateMove {move :: BoundMoveT, before :: GameState}
+-- afterFirstStageHelper :: StateMove -> Maybe GameState
+-- afterFirstStageHelper (StateMove (MkQueenMove x, f) bef) = Nothing
