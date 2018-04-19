@@ -168,13 +168,16 @@ data VecCC where
 -- unboxVecCCLinear :: (LinearDirection a) => ('MkLinearVecCC (LinearVec a)) -> Maybe (LinearVec a)
 -- unboxVecCCLinear (MkLinearVecCC a) = Just a
 data VecEBC where
-  MkDiagonalVecEBC :: LinearVec DiagonalDirection -> VecEBC
-  MkRankwiseVecEBC :: LinearVec RankwiseDirection -> VecEBC
-  MkFilewiseVecEBC :: LinearVec FilewiseDirection -> VecEBC
+  MkLinearVecEBC :: LinearVecEBC -> VecEBC
   MkKnightVecEBC :: KnightVec -> VecEBC
   MkCastlingVecEBC :: Castling -> VecEBC
   MkPawnJumpByTwoVecEBC :: PawnJumpByTwo -> VecEBC
-
+data StraightVecEBC where
+  MkRankwiseVecEBC :: LinearVec RankwiseDirection -> StraightVecEBC
+  MkFilewiseVecEBC :: LinearVec FilewiseDirection -> StraightVecEBC
+data LinearVecEBC where
+  MkDiagonalVecEBC :: LinearVec DiagonalDirection -> LinearVecEBC
+  MkStraightVecEBC :: StraightVecEBC -> LinearVecEBC
 
 class (Vec a, Reversable a) => ReversableVec a
 -- instance (Reversable a) => Vec (ReversableVec a) where
