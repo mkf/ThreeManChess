@@ -63,6 +63,11 @@ vecsFromToWith InwardPawn a b _
   | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) = [MkVecC $ LinearVec (DiagonalDirection Inwards Pluswards) Once]
   | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) = [MkVecC $ LinearVec (DiagonalDirection Inwards Minuswards) Once]
   | otherwise = []
+vecsFromToWith OutwardPawn a b _
+  | maybe False (b==) (addOne Outwards a) = [MkVecC $ LinearVec Outwards Once]
+  | maybe False (b==) (addOne (DiagonalDirection Outwards Pluswards) a) = [MkVecC $ LinearVec (DiagonalDirection Outwards Pluswards) Once]
+  | maybe False (b==) (addOne (DiagonalDirection Outwards Minuswards) a) = [MkVecC $ LinearVec (DiagonalDirection Outwards Minuswards) Once]
+  | otherwise = []
 
 data MoveT where
   MkQueenMove :: Move 'Queen -> MoveT
