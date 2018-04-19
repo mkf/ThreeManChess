@@ -120,10 +120,8 @@ type BoundMove f = (Move f, Pos)
 type BoundMoveT = (MoveT, Pos)
 from :: (a,Pos) -> Pos
 from = snd
--- to :: BoundMoveT -> Maybe Pos
--- to (m,from) =
---   let (MkVecC a) = vectorFromMoveT m in
---     add from a
+to :: BoundMoveT -> Maybe Pos
+to (m,f) = addEBC f $ vectorFromMoveT m
 
 -- boardSimplyAfter :: GameBoard -> BoundMoveT
 
