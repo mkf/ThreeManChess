@@ -418,3 +418,6 @@ fromToDiagonal a b = let s = fromToDiagonals a b in uncurry (++) (mapHomoTuple2 
 fromToLinear :: Pos -> Pos -> [LinearVecC]
 fromToLinear a b = fmap (\(MkStraightVecC t) -> (MkLinearVecC t)) (fromToStraight a b) ++
                    fmap MkLinearVecC (fromToDiagonal a b)
+
+data ShortOrLong = Short | Long
+data CanIDiagonal = CanDiagonalBut ShortOrLong FilewiseDirection | CanDiagonalBoth FilewiseDirection | CannotDiagonal
