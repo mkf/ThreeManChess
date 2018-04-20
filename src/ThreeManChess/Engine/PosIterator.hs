@@ -16,6 +16,10 @@ allFilesFrom x =  allFilesBetweenRIncl x x
 --     x:xs
 allFilesFromZero :: [File]
 allFilesFromZero = allFilesFrom (File White (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf))
+
+allSegmentFiles :: Color -> [File]
+allSegmentFiles c = filter ((c==).segmColor) allFilesFromZero
+
 allRanks :: [Rank]
 allRanks = ranks
 allPos2D :: [[Pos]]
