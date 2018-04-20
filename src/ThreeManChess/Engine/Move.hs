@@ -165,9 +165,19 @@ whatColorThereIsPawnToEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> do epsm <- enPassantFieldPosBM (move sm); Just $ figColor <$> board (before sm) epsm
   _ -> Nothing
 checkIfSuchEnPassantPossible :: StateMove -> Bool
-checkIfSuchEnPassantPossible _ = error "Not implemented TODO"
+checkIfSuchEnPassantPossible sm = fromMaybe False $ checkIfSuchEnPassantPossibleMaybe sm
+matchToColFun :: EnPassantMatch -> Color -> Color
+matchToColFun LastMatch = prev
+matchToColFun PrevMatch = next
+checkIfSuchEnPassantPossibleMaybe :: StateMove -> Maybe Bool
+checkIfSuchEnPassantPossibleMaybe sm = do
+  whaCol <- whatColorThereIsPawnToEnPassant sm;
+  who <- whoMove sm;
+  tosm <- to (move sm);
+  ma <- matchEnP (enPassantStore (before sm)) tosm
+  Just $ whaCol == Just (matchToColFun ma who)
 checkIfEnPassantImpossibility :: StateMove -> Bool
-checkIfEnPassantImpossibility _ = error "Not implemented TODO"
+checkIfEnPassantImpossibility sm = checkIfIsEnPassant sm && not (checkIfSuchEnPassantPossible sm)
 checkIfCapturing :: StateMove -> Bool
 checkIfCapturing _ = error "Not implemented TODO"
 checkIfCapturingOwnPiece :: StateMove -> Bool
