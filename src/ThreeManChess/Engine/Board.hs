@@ -20,6 +20,11 @@ empty _ = Nothing
 -- starting :: Board a
 -- starting (Pos 1 f) =
 
+isEmpty :: Board a -> Pos -> Bool
+isEmpty f p = case f p of
+  Just _ -> False
+  Nothing -> True
+
 type ARank a = File -> Maybe a
 type AFile a = Rank -> Maybe a
 type TwoOf a = (a,a)
@@ -99,3 +104,7 @@ performSingleChange (MoveFromToOverwritingWithOtherDisappear a b) f = put (perfo
 performSingleChange (Replacement w a) f = put f w (Just a)
 performSingleChanges :: [BoardSingleChange a] -> Board a -> Board a
 performSingleChanges xs b = foldl (flip performSingleChange) b xs
+
+checkEmpties :: Board a -> [Pos] -> Bool
+checkEmpties f (x:xs) = isEmpty f x && checkEmpties f xs
+checkEmpties _ [] = True

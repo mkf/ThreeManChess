@@ -190,8 +190,12 @@ checkIfDestEmpty :: StateMove -> Bool
 checkIfDestEmpty sm = (Nothing==) $ board (before sm) <$> to (move sm)
 checkIfCapturingOwnPiece :: StateMove -> Bool
 checkIfCapturingOwnPiece sm = not $ checkIfDestEmpty sm || checkIfDestOpponent sm
-checkIfAllAreEmpties :: StateMove -> Bool
-checkIfAllAreEmpties _ = error "Not implemented TODO"
+emptiesMT :: BoundMoveT -> Maybe [Pos]
+emptiesMT (m,f) = emptiesFromEBC f (vectorFromMoveT m)
+checkIfAllAreEmpties :: StateMove -> Maybe Bool
+checkIfAllAreEmpties sm = do
+  empties <- emptiesMT $ move sm;
+  Just $ checkEmpties (board (before sm)) empties
 checkCastlingImpossibility :: StateMove -> Bool
 checkCastlingImpossibility _ = error "Not implemented TODO"
 checkIfCapturingThruMoats :: StateMove -> Bool
