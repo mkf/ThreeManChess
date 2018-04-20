@@ -250,6 +250,11 @@ checkIfCapturingThruMoats :: StateMove -> Bool
 checkIfCapturingThruMoats sm = checkIfDestOpponent sm && isEmptyList (moatsM (move sm))
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
 checkIfWeArePassingAnUnbridgedMoat sm = isEmptyList $ filter (Unbridged==) $ fmap (isBridged $ moatsState $ before sm) $ moatsM $ move sm
+checkIfThereIsNoCreekAgainstUs :: BoundMoveT -> Bool
+checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,File _ se))
+  | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
+  | otherwise = True
+checkIfThereIsNoCreekAgainstUs _ = True
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
