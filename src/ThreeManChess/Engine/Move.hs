@@ -8,7 +8,7 @@ import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.Possibilities
 import ThreeManChess.Engine.FigType
 import ThreeManChess.Engine.GameState
-import ThreeManChess.Engine.GameBoard
+-- import ThreeManChess.Engine.GameBoard
 import ThreeManChess.Engine.Board
 import ThreeManChess.Engine.Moats
 import ThreeManChess.Engine.CastlingPossibilities
@@ -108,6 +108,9 @@ moveFromVecWith OutwardPawn (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC 
 moveFromVecWith OutwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a) Once))) =
   Just $ Left (\x -> MkOutwardPawnMove (Capturing a, x))
 moveFromVecWith OutwardPawn _ = Nothing
+
+movesFromToWith :: FigType -> Pos -> Pos -> Color -> [Either (Maybe Promotion -> MoveT) MoveT]
+movesFromToWith ft f t c = fmap (fromJust . moveFromVecWith ft) (vecsFromToWith ft f t c)
 
 data MoveT where
   MkQueenMove :: Move 'Queen -> MoveT
