@@ -10,6 +10,7 @@ import ThreeManChess.Engine.GameState
 import ThreeManChess.Engine.GameBoard
 import ThreeManChess.Engine.Board
 import ThreeManChess.Engine.Moats
+import ThreeManChess.Engine.CastlingPossibilities
 import ThreeManChess.Engine.EnPassantStore
 import Data.Maybe
 
@@ -166,6 +167,14 @@ enPassantFieldPosBM (MkInwardPawnMove Jump, f) = Just $ fromJust $ enPassantFiel
 enPassantFieldPosBM _ = Nothing
 afterEnPassantStore :: StateMove -> EnPassantStore
 afterEnPassantStore (StateMove m GameState{enPassantStore=x}) = mappEnP (enPassantFieldPosBM m) x
+
+afterColorCastling :: CastlingPossibilitiesForColor -> BoundMoveT -> Color -> CastlingPossibilitiesForColor
+afterColorCastling _ (MkKingMove _, _) _ = noCastlingForColor
+afterColorCastling b (MkRookMove _, (MostOuter, File cof seg)) coi
+  | coi==cof && seg==SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf = casOff QueensideCastling b
+  | coi==cof && seg==SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf = casOff KingsideCastling b
+  | otherwise = b
+afterColorCastling b _ _ = b
 
 -- afterFirstStageHelper :: StateMove -> Maybe GameState
 -- afterFirstStageHelper (StateMove (MkQueenMove x, f) bef) = Nothing
