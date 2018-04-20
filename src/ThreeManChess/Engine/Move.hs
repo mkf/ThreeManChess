@@ -396,8 +396,10 @@ _isThereAThreatHelperOne this toP fromP pA ePS = do
   figt <- fmap figType (this fromP);
   Just $ let bef = hypoConstruct this (lastEnP ePS) pA in
            let vemovs = hypoMovesFromToWith figt fromP toP in
-             let vecs = vectorFromMoveT . disregardPromotionPossibOfEither . hypoMoveToNormalMove <$> vemovs in
-               False
+             --let vecs = vectorFromMoveT . disregardPromotionPossibOfEither . hypoMoveToNormalMove <$> vemovs in
+             isEmptyList $ fmap fromJust $ filter isJust $ checkHypoImpossibility . (\x -> HypoStateMove{hypoBefore=bef,hypoMove=(x,fromP)}) <$> vemovs
+isThereAThreat :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassantStore -> Bool
+isThereAThreat this toP fromP pA ePS = fromMaybe False $ _isThereAThreatHelperOne this toP fromP pA ePS
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
