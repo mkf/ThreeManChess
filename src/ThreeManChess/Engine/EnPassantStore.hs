@@ -4,6 +4,12 @@ import ThreeManChess.Engine.Pos
 
 -- type EnPassantStore = Maybe (Maybe Pos, Pos)
 type EnPassantStore = (Maybe Pos, Maybe Pos)
+-- (prev,last)
+
+prevEnP :: EnPassantStore -> Maybe Pos
+prevEnP = fst
+lastEnP :: EnPassantStore -> Maybe Pos
+lastEnP = snd
 
 mappEnP :: Maybe Pos -> EnPassantStore -> EnPassantStore
 mappEnP a (_, b) = (b, a)
