@@ -186,6 +186,8 @@ _checkIfCapturingSimplyMaybe sm = do
   tosm <- to (move sm);
   oppo <- figColor <$> board (before sm) tosm;
   Just $ oppo /= who
+checkIfDestEmpty :: StateMove -> Bool
+checkIfDestEmpty sm = (Nothing==) $ board (before sm) <$> to (move sm)
 checkIfCapturingOwnPiece :: StateMove -> Bool
 checkIfCapturingOwnPiece _ = error "Not implemented TODO"
 checkIfAllAreEmpties :: StateMove -> Bool
