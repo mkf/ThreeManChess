@@ -33,3 +33,5 @@ castlingSetColor (y,_,z) Gray x = (y,x,z)
 castlingSetColor (y,z,_) Black x = (y,z,x)
 casOffC :: Color -> Castling -> CastlingPossibilities -> CastlingPossibilities
 casOffC co ca b = castlingSetColor b co $ casOff ca $ castlingGetColor b co
+castlingGetC :: CastlingPossibilities -> Color -> Castling -> Bool
+castlingGetC f co = castlingGet $ castlingGetColor f co

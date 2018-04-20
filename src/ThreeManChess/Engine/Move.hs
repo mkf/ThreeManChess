@@ -233,8 +233,16 @@ checkIfAllAreEmpties :: StateMove -> Maybe Bool
 checkIfAllAreEmpties sm = do
   empties <- emptiesMT $ move sm;
   Just $ checkEmpties (board (before sm)) empties
-checkCastlingImpossibility :: StateMove -> Bool
-checkCastlingImpossibility _ = error "Not implemented TODO"
+checkIfNoCastlingImpossibility :: StateMove -> Bool
+checkIfNoCastlingImpossibility sm = fromMaybe True $ _checkCastlingImpossibilityMaybeHelper sm
+_extractCastling :: MoveT -> Maybe Castling
+_extractCastling (MkKingMove (NotAlone x)) = Just x
+_extractCastling _ = Nothing
+_checkCastlingImpossibilityMaybeHelper :: StateMove -> Maybe Bool
+_checkCastlingImpossibilityMaybeHelper sm = do
+  wh <- whoMove sm;
+  cas <- _extractCastling $ fst $ move sm;
+  Just $ castlingGetC (castlingPossibilities (before sm)) wh cas
 isEmptyList :: [a] -> Bool
 isEmptyList [] = True
 isEmptyList _ = False
