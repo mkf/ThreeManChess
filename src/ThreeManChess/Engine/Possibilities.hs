@@ -145,6 +145,7 @@ instance InterfaceVecEBC StraightVecEBC where
   flipEmptiesFromEBC (MkRankwiseVecEBC x) = flip emptiesFrom x
   flipEmptiesFromEBC (MkFilewiseVecEBC x) = flip emptiesFrom x
   moats _ (MkRankwiseVecEBC _) = []
+  moats p (MkFilewiseVecEBC x) = moatsFilewise p x
 --  flipMoatsEBC (MkRankwiseVecEBC x) = flip moats x
 --  flipMoatsEBC (MkFilewiseVecEBC x) = flip moats x
 instance InterfaceVecEBC LinearVecEBC where
@@ -173,10 +174,40 @@ instance InterfaceVecEBC VecEBC where
   flipEmptiesFromEBC (MkPawnJumpByTwoVecEBC x) = flip emptiesFrom x
   moats _ (MkCastlingVecEBC _) = []
   moats _ (MkPawnJumpByTwoVecEBC _) = []
+  moats p (MkLinearVecEBC x) = moats p x
+  moats p (MkKnightVecEBC x) = moatsKnight p x
   -- flipMoatsEBC (MkLinearVecEBC x) = flip moats x
   -- flipMoatsEBC (MkKnightVecEBC x) = flip moats x
   -- flipMoatsEBC (MkCastlingVecEBC x) = flip moats x
   -- flipMoatsEBC (MkPawnJumpByTwoVecEBC x) = flip moats x
+_xrqnmv :: SegmentEight -> SegmentEight -> Maybe (Rank, FilewiseDirection)
+_xrqnmv (SegmentEight (SegmentQuarter SecondHalf SecondHalf) FirstHalf) (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) =
+  Just (SecondOuter, Pluswards)
+_xrqnmv (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) (SegmentEight (SegmentQuarter FirstHalf FirstHalf) SecondHalf) =
+  Just (SecondOuter, Pluswards)
+_xrqnmv (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) =
+  Just (MiddleOuter, Pluswards)
+_xrqnmv (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) (SegmentEight (SegmentQuarter SecondHalf SecondHalf) FirstHalf) =
+  Just (SecondOuter, Minuswards)
+_xrqnmv (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) =
+  Just (MiddleOuter, Minuswards)
+_xrqnmv (SegmentEight (SegmentQuarter FirstHalf FirstHalf) SecondHalf) (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) =
+  Just (SecondOuter, Minuswards)
+_xrqnmv _ _ = Nothing
+_xoreq :: Pos -> Pos -> Maybe Bool
+_xoreq (fr,File _ fs) (tr, File _ ts)
+  | tr>MiddleOuter && fr>MiddleOuter = Nothing
+  | otherwise =
+      do (w,_) <- _xrqnmv fs ts;
+         Just $ case fr of
+                  MostOuter -> tr==w
+                  _ -> fr==w && tr==MostOuter
+moatKnight :: Pos -> KnightVec -> Maybe MoatLocalization
+moatKnight f v = do
+  to <- add f v;
+  (_,wd) <- _xrqnmv (colorSegmFile (file f)) (colorSegmFile (file to));
+  xo <- _xoreq f to;
+  if xo then Just (onDirecLoc wd (segmColor (file f))) else Nothing
 instance Eq StraightVecEBC where
   (MkRankwiseVecEBC x) == (MkRankwiseVecEBC y) = x==y
   (MkFilewiseVecEBC x) == (MkFilewiseVecEBC y) = x==y
@@ -264,8 +295,23 @@ instance (LinearDirection a) => Vec (LinearVec a) where
   emptiesFrom _ (LinearVec _ Once) = Just []
   emptiesFrom p (LinearVec d c) =  addOne d p >>= (\pp -> Just $ pp:_emptiesFromMust pp (LinearVec d c))
 
+zeroSegmentEight :: SegmentEight
+zeroSegmentEight = SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf
+sevenSegmentEight :: SegmentEight
+sevenSegmentEight = SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf
+moatFilewise :: Pos -> FilewiseDirection -> Maybe MoatLocalization
+moatFilewise (MostOuter, File col s) d
+  | s==zeroSegmentEight && d==Minuswards = Just $ onDirecLoc Minuswards col
+  | s==sevenSegmentEight && d==Pluswards = Just $ onDirecLoc Pluswards col
+  | otherwise = Nothing
+moatFilewise _ _ = Nothing
+moatsFilewise :: Pos -> LinearVec FilewiseDirection -> [MoatLocalization]
+moatsFilewise p (LinearVec d Once) = maybeToList $ moatFilewise p d
+moatsFilewise p (LinearVec d (OnceMore c)) = maybeToList (moatFilewise p d) ++ moatsFilewise p (LinearVec d c)
 moatsDiagonal :: Pos -> LinearVec DiagonalDirection -> [MoatLocalization]
 moatsDiagonal p x = maybeToList $ moatDiagonal p x
+moatsKnight :: Pos -> KnightVec -> [MoatLocalization]
+moatsKnight p x = maybeToList $ moatKnight p x
 
 moatDiagonal :: Pos -> LinearVec DiagonalDirection -> Maybe MoatLocalization
 moatDiagonal (MostOuter, File col (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf))
