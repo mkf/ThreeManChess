@@ -56,6 +56,9 @@ vectorFromPossiblyPromotedMoveTNoEither :: (Maybe Promotion -> MoveT) -> VecEBC
 vectorFromPossiblyPromotedMoveTNoEither f = vectorFromMoveT (f Nothing)
 vectorFromPossiblyPromotedMoveT :: Either (Maybe Promotion -> MoveT) MoveT -> VecEBC
 vectorFromPossiblyPromotedMoveT = either vectorFromPossiblyPromotedMoveTNoEither vectorFromMoveT
+disregardPromotionPossibOfEither :: Either (Maybe Promotion -> MoveT) MoveT -> MoveT
+disregardPromotionPossibOfEither (Right x) = x
+disregardPromotionPossibOfEither (Left f) = f Nothing
 
 vecsFromToWith :: FigType -> Pos -> Pos -> Color -> [VecEBC]
 vecsFromToWith Queen a b _ = fmap MkLinearVecEBC (fromToLinear a b)
