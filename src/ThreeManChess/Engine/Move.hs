@@ -154,8 +154,12 @@ checkIfFigTypeOK StateMove{move = (m,x), before = GameState {board=f}} =
     )==).figType) (f x)
 checkIfFigColorOK :: StateMove -> Bool
 checkIfFigColorOK StateMove{move = (_,l), before = GameState {board=f, movesNext=c}} = maybe False ((c==).figColor) (f l)
+whoMove :: StateMove -> Maybe Color
+whoMove StateMove{move = (_,l), before = GameState {board=f}} = fmap figColor (f l)
 checkIfIsEnPassant :: StateMove -> Bool
-checkIfIsEnPassant _ = error "Not implemented TODO"
+checkIfIsEnPassant sm = case fst $ move sm of
+  MkOutwardPawnMove (Capturing _,Nothing) -> (do tosm <- to (move sm); Just $ isNothing $ board (before sm) tosm) == Just True
+  _ -> False
 checkIfEnPassantPossible :: StateMove -> Bool
 checkIfEnPassantPossible _ = error "Not implemented TODO"
 checkIfCapturing :: StateMove -> Bool
