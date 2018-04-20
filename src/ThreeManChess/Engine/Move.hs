@@ -131,6 +131,14 @@ hypoMoveFromVecWith InwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (Dia
 hypoMoveFromVecWith InwardPawn _ = Nothing
 hypoMoveFromVecWith OutwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a) Once))) = Just $ HypoOutwardPawnMove a
 hypoMoveFromVecWith OutwardPawn _ = Nothing
+hypoMoveToNormalMove :: HypoCapMoveT -> Either (Maybe Promotion -> MoveT) MoveT
+hypoMoveToNormalMove (HypoQueenMove x) = Right $ MkQueenMove x
+hypoMoveToNormalMove (HypoKingMove x) = Right $ MkKingMove $ Alone x
+hypoMoveToNormalMove (HypoRookMove x) = Right $ MkRookMove x
+hypoMoveToNormalMove (HypoBishopMove x) = Right $ MkBishopMove x
+hypoMoveToNormalMove (HypoKnightMove x) = Right $ MkKnightMove x
+hypoMoveToNormalMove (HypoInwardPawnMove x) = Right $ MkInwardPawnMove $ Walk $ Capturing x
+hypoMoveToNormalMove (HypoOutwardPawnMove x) = Left (\p -> MkOutwardPawnMove (Capturing x, p))
 
 movesFromToWith :: FigType -> Pos -> Pos -> Color -> [Either (Maybe Promotion -> MoveT) MoveT]
 movesFromToWith ft f t c = fmap (fromJust . moveFromVecWith ft) (vecsFromToWith ft f t c)
