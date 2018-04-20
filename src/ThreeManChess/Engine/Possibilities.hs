@@ -429,8 +429,8 @@ fromToFilewise (a, b) (c, d)
 -- type StraightVecsOfKinds = ([LinearVec RankwiseDirection], [LinearVec FilewiseDirection])
 -- type LinearVecsOfKinds = (StraightVecsOfKinds, [LinearVec DiagonalDirection])
 -- fromToStraight :: Pos -> Pos -> StraightVecsOfKinds
-fromToStraight :: Pos -> Pos -> [StraightVecC]
-fromToStraight a b = (map MkStraightVecC (fromToRankwise a b)) ++ (map MkStraightVecC (fromToFilewise a b))
+fromToStraight :: Pos -> Pos -> [StraightVecEBC]
+fromToStraight a b = (map MkRankwiseVecEBC (fromToRankwise a b)) ++ (map MkFilewiseVecEBC (fromToFilewise a b))
 -- fromToDiagWards :: DiagonalDirection -> Pos -> Pos -> Maybe Count
 -- fromToDiagWards (DiagonalDirection Outwards _) (MostOuter, _) _ = Nothing
 -- fromToDiagWards (DiagonalDirection Inwards w) (MostInner, a) (MostInner, b)
@@ -500,9 +500,9 @@ fromToDiagonals :: Pos -> Pos -> (Maybe (LinearVec DiagonalDirection), Maybe (Li
 fromToDiagonals a b = (fromToShortDiagonal a b, fromToLongDiagonal a b)
 fromToDiagonal :: Pos -> Pos -> [LinearVec DiagonalDirection]
 fromToDiagonal a b = let s = fromToDiagonals a b in uncurry (++) (mapHomoTuple2 maybeToList s)
-fromToLinear :: Pos -> Pos -> [LinearVecC]
-fromToLinear a b = fmap (\(MkStraightVecC t) -> (MkLinearVecC t)) (fromToStraight a b) ++
-                   fmap MkLinearVecC (fromToDiagonal a b)
+fromToLinear :: Pos -> Pos -> [LinearVecEBC]
+fromToLinear a b = fmap MkStraightVecEBC (fromToStraight a b) ++
+                   fmap MkDiagonalVecEBC (fromToDiagonal a b)
 
 data ShortOrLong = Short | Long
 data CanIDiagonal = CanDiagonalBut ShortOrLong FilewiseDirection | CanDiagonalBoth FilewiseDirection | CannotDiagonal

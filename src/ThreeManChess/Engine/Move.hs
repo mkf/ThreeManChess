@@ -49,33 +49,39 @@ vectorFromMoveT (MkInwardPawnMove Jump) = MkPawnJumpByTwoVecEBC PawnJumpByTwo
 vectorFromMoveT (MkOutwardPawnMove (Forward,_)) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Outwards Once
 vectorFromMoveT (MkOutwardPawnMove (Capturing x,_)) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards x) Once
 
-vecsFromToWith :: FigType -> Pos -> Pos -> Color -> [VecC]
-vecsFromToWith Queen a b _ = fmap (\(MkLinearVecC x) -> (MkVecC x)) (fromToLinear a b)
+vecsFromToWith :: FigType -> Pos -> Pos -> Color -> [VecEBC]
+vecsFromToWith Queen a b _ = fmap MkLinearVecEBC (fromToLinear a b)
 vecsFromToWith King a b col
-  | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) = [MkVecC $ flip LinearVec Once $ DiagonalDirection Inwards Pluswards]
-  | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) = [MkVecC $ flip LinearVec Once $ DiagonalDirection Inwards Minuswards]
-  | maybe False (b==) (addOne (DiagonalDirection Outwards Pluswards) a) = [MkVecC $ flip LinearVec Once $ DiagonalDirection Outwards Pluswards]
-  | maybe False (b==) (addOne (DiagonalDirection Outwards Minuswards) a) = [MkVecC $ flip LinearVec Once $ DiagonalDirection Outwards Minuswards]
-  | maybe False (b==) (addOne Pluswards a) = [MkVecC $ LinearVec Pluswards Once]
-  | maybe False (b==) (addOne Minuswards a) = [MkVecC $ LinearVec Minuswards Once]
-  | maybe False (b==) (addOne Inwards a) = [MkVecC $ LinearVec Inwards Once]
-  | maybe False (b==) (addOne Outwards a) = [MkVecC $ LinearVec Outwards Once]
-  | a==(MostOuter, File col kfm) && maybe False (b==) (add a QueensideCastling) = [MkVecC QueensideCastling]
-  | a==(MostOuter, File col kfm) && maybe False (b==) (add a KingsideCastling) = [MkVecC KingsideCastling]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) =
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ flip LinearVec Once $ DiagonalDirection Inwards Pluswards]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) =
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ flip LinearVec Once $ DiagonalDirection Inwards Minuswards]
+  | maybe False (b==) (addOne (DiagonalDirection Outwards Pluswards) a) =
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ flip LinearVec Once $ DiagonalDirection Outwards Pluswards]
+  | maybe False (b==) (addOne (DiagonalDirection Outwards Minuswards) a) =
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ flip LinearVec Once $ DiagonalDirection Outwards Minuswards]
+  | maybe False (b==) (addOne Pluswards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec Pluswards Once]
+  | maybe False (b==) (addOne Minuswards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec Minuswards Once]
+  | maybe False (b==) (addOne Inwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Inwards Once]
+  | maybe False (b==) (addOne Outwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Outwards Once]
+  | a==(MostOuter, File col kfm) && maybe False (b==) (add a QueensideCastling) = [MkCastlingVecEBC QueensideCastling]
+  | a==(MostOuter, File col kfm) && maybe False (b==) (add a KingsideCastling) = [MkCastlingVecEBC KingsideCastling]
   | otherwise = []
-vecsFromToWith Rook a b _ = fmap (\(MkStraightVecC x) -> (MkVecC x)) (fromToStraight a b)
-vecsFromToWith Bishop a b _ = MkVecC <$> fromToDiagonal a b
-vecsFromToWith Knight a b _ = MkVecC <$> fromToKnight a b
+vecsFromToWith Rook a b _ = fmap (MkLinearVecEBC . MkStraightVecEBC) (fromToStraight a b)
+vecsFromToWith Bishop a b _ = MkLinearVecEBC . MkDiagonalVecEBC <$> fromToDiagonal a b
+vecsFromToWith Knight a b _ = MkKnightVecEBC <$> fromToKnight a b
 vecsFromToWith InwardPawn a b col
-  | maybe False (b==) (addOne Inwards a) = [MkVecC $ LinearVec Inwards Once]
-  | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) = [MkVecC $ LinearVec (DiagonalDirection Inwards Pluswards) Once]
-  | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) = [MkVecC $ LinearVec (DiagonalDirection Inwards Minuswards) Once]
-  | rank a ==SecondOuter && segmColor (file a) == col = [MkVecC PawnJumpByTwo]
+  | maybe False (b==) (addOne Inwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Inwards Once]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) = [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards Pluswards) Once]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) = [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards Minuswards) Once]
+  | rank a ==SecondOuter && segmColor (file a) == col = [MkPawnJumpByTwoVecEBC PawnJumpByTwo]
   | otherwise = []
 vecsFromToWith OutwardPawn a b _
-  | maybe False (b==) (addOne Outwards a) = [MkVecC $ LinearVec Outwards Once]
-  | maybe False (b==) (addOne (DiagonalDirection Outwards Pluswards) a) = [MkVecC $ LinearVec (DiagonalDirection Outwards Pluswards) Once]
-  | maybe False (b==) (addOne (DiagonalDirection Outwards Minuswards) a) = [MkVecC $ LinearVec (DiagonalDirection Outwards Minuswards) Once]
+  | maybe False (b==) (addOne Outwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Outwards Once]
+  | maybe False (b==) (addOne (DiagonalDirection Outwards Pluswards) a) =
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards Pluswards) Once]
+  | maybe False (b==) (addOne (DiagonalDirection Outwards Minuswards) a) =
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards Minuswards) Once]
   | otherwise = []
 
 -- moveFromVecWith :: FigType -> VecC -> Either (Maybe Promotion -> MoveT) MoveT
