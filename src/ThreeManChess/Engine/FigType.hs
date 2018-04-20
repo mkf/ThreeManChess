@@ -14,7 +14,7 @@ instance FigTypeClass FigType
 figTypes :: [FigType]
 figTypes = [InwardPawn,OutwardPawn,Rook,Knight,Bishop,King,Queen]
 
-data Promotion = RookPromotion | KnightPromotion | BishopPromotion | QueenPromotion
+data Promotion = RookPromotion | KnightPromotion | BishopPromotion | QueenPromotion deriving (Eq, Show)
 desiredType :: Promotion -> FigType
 desiredType RookPromotion = Rook
 desiredType KnightPromotion = Knight

@@ -17,9 +17,9 @@ import Data.Maybe
 
 data (Vec a) => BoundVec a = BoundVec a Pos
 
-data KingMove = AloneDiagonally DiagonalDirection | AloneRankwise RankwiseDirection | AloneFilewise FilewiseDirection | NotAlone Castling
-data JustPawnMove = Forward | Capturing FilewiseDirection
-data PossiblyJumpingPawnMove = Walk JustPawnMove | Jump
+data KingMove = AloneDiagonally DiagonalDirection | AloneRankwise RankwiseDirection | AloneFilewise FilewiseDirection | NotAlone Castling deriving (Eq, Show)
+data JustPawnMove = Forward | Capturing FilewiseDirection deriving (Eq, Show)
+data PossiblyJumpingPawnMove = Walk JustPawnMove | Jump deriving (Eq, Show)
 -- data Promotion = forall a . PromotionDesire a => Promotion FigType
 -- data Promotion where
 --   Promotion :: PromotionDesire a => a -> Promotion
@@ -112,6 +112,14 @@ moveFromVecWith OutwardPawn _ = Nothing
 movesFromToWith :: FigType -> Pos -> Pos -> Color -> [Either (Maybe Promotion -> MoveT) MoveT]
 movesFromToWith ft f t c = fmap (fromJust . moveFromVecWith ft) (vecsFromToWith ft f t c)
 
+boundMovePromotionHelper :: Pos -> Either (Maybe Promotion -> MoveT) MoveT -> Either (Maybe Promotion -> BoundMoveT) BoundMoveT
+boundMovePromotionHelper (SecondOuter, f) (Left x) = Left (\y -> (x y, (SecondOuter, f)))
+boundMovePromotionHelper fr (Left x) = Right (x Nothing, fr)
+boundMovePromotionHelper fr (Right x) = Right (x, fr)
+
+boundMovesFromToWith :: FigType -> Pos -> Pos -> Color -> [Either (Maybe Promotion -> BoundMoveT) BoundMoveT]
+boundMovesFromToWith ft f t c = boundMovePromotionHelper f <$> movesFromToWith ft f t c
+
 data MoveT where
   MkQueenMove :: Move 'Queen -> MoveT
   MkKingMove :: Move 'King -> MoveT
@@ -120,6 +128,25 @@ data MoveT where
   MkKnightMove :: Move 'Knight -> MoveT
   MkInwardPawnMove :: Move 'InwardPawn -> MoveT
   MkOutwardPawnMove :: Move 'OutwardPawn -> MoveT
+
+instance Eq MoveT where
+  MkQueenMove x == MkQueenMove y = x==y
+  MkKingMove x == MkKingMove y = x==y
+  MkRookMove x == MkRookMove y = x==y
+  MkBishopMove x == MkBishopMove y = x==y
+  MkKnightMove x == MkKnightMove y = x==y
+  MkInwardPawnMove x == MkInwardPawnMove y = x==y
+  MkOutwardPawnMove x == MkOutwardPawnMove y = x==y
+  _ == _ = False
+
+instance Show MoveT where
+  show (MkQueenMove x) = "A Contained Queen Move of " ++ show x
+  show (MkKingMove x) = "A Contained King Move of " ++ show x
+  show (MkRookMove x) = "A Contained Rook Move of " ++ show x
+  show (MkBishopMove x) = "A Contained Bishop Move of " ++ show x
+  show (MkKnightMove x) = "A Contained Knight Move of " ++ show x
+  show (MkInwardPawnMove x) = "A Contained InwardPawn Move of " ++ show x
+  show (MkOutwardPawnMove x) = "A Contained OutwardPawn Move of " ++ show x
 
 -- encapsulateMoveType :: FigType -> Move f -> MoveT
 -- encapsulateMoveType Queen x = MkQueenMove x

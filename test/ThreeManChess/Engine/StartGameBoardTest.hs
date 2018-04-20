@@ -21,6 +21,23 @@ figTypeAndColorOKTest =
                      before=newGame} in
     True @=? (checkIfFigTypeOK sm && checkIfFigColorOK sm)
 
+theAFileA :: SegmentEight
+theAFileA = SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf
+
+justRight :: Either a b -> b
+justRight (Right a) = a
+justRight _ = error "yo"
+
+a2a3Test :: Assertion
+a2a3Test = [(MkInwardPawnMove (Walk Forward), (SecondOuter, File White theAFileA))] @=?
+           justRight <$>
+           boundMovesFromToWith
+           InwardPawn
+           (SecondOuter, File White theAFileA)
+           (MiddleOuter, File White theAFileA)
+           White
+
 tests :: [Test.Framework.Test]
 tests = [testCase "whiteKingTest" whiteKingTest,
-         testCase "figTypeAndColorOKTest" figTypeAndColorOKTest]
+         testCase "figTypeAndColorOKTest" figTypeAndColorOKTest,
+         testCase "a2a3Test" a2a3Test]

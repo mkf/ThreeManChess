@@ -25,7 +25,7 @@ perpendicularTo Rankwise = Filewise
 perpendicularTo Filewise = Rankwise
 class (LinearDirection a) => StraightDirection a where
   orientation :: a -> Orientation
-data RankwiseDirection = Inwards | Outwards deriving (Data, Typeable)-- deriving StraightDirection
+data RankwiseDirection = Inwards | Outwards deriving (Data, Typeable, Show)-- deriving StraightDirection
 instance Reversable RankwiseDirection where
   rever Inwards = Outwards
   rever Outwards = Inwards
@@ -46,7 +46,7 @@ instance Eq RankwiseDirection where
   Outwards == Outwards = True
   Inwards == Outwards = False
   Outwards == Inwards = False
-data FilewiseDirection = Pluswards | Minuswards deriving (Data, Typeable)-- deriving StraightDirection
+data FilewiseDirection = Pluswards | Minuswards deriving (Data, Typeable, Show)-- deriving StraightDirection
 instance Reversable FilewiseDirection where
   rever Pluswards = Minuswards
   rever Minuswards = Pluswards
@@ -64,7 +64,7 @@ instance Eq FilewiseDirection where
   Minuswards == Minuswards = True
   Pluswards == Minuswards = False
   Minuswards == Pluswards = False
-data DiagonalDirection = DiagonalDirection RankwiseDirection FilewiseDirection -- deriving LinearDirection
+data DiagonalDirection = DiagonalDirection RankwiseDirection FilewiseDirection deriving Show -- deriving LinearDirection
 rankwise :: DiagonalDirection -> RankwiseDirection
 rankwise (DiagonalDirection x _) = x
 filewise :: DiagonalDirection -> FilewiseDirection
@@ -155,7 +155,7 @@ class (Eq a-- , Read a, Show a
   reverMaybe :: a -> Maybe a
   add :: Pos -> a -> Maybe Pos
   emptiesFrom :: Pos -> a -> Maybe [Pos]
-class (Eq a-- , Read a, Show a
+class (Eq a, Show a -- , Read a
       ) => InterfaceVecEBC a where
   reverMaybeEBC :: a -> Maybe a
   addEBC :: Pos -> a -> Maybe Pos
@@ -181,12 +181,25 @@ data VecEBC where
   MkKnightVecEBC :: KnightVec -> VecEBC
   MkCastlingVecEBC :: Castling -> VecEBC
   MkPawnJumpByTwoVecEBC :: PawnJumpByTwo -> VecEBC
+instance Show VecEBC where
+  show (MkLinearVecEBC x) = "an EBC-contained linear vec of " ++ show x
+  show (MkKnightVecEBC x) = "an EBC-contained knight vec of " ++ show x
+  show (MkCastlingVecEBC x) = "an EBC-contained castling vec of " ++ show x
+  show (MkPawnJumpByTwoVecEBC x) = "an EBC-contained pawn jump vec of " ++ show x
 data StraightVecEBC where
   MkRankwiseVecEBC :: LinearVec RankwiseDirection -> StraightVecEBC
   MkFilewiseVecEBC :: LinearVec FilewiseDirection -> StraightVecEBC
 data LinearVecEBC where
   MkDiagonalVecEBC :: LinearVec DiagonalDirection -> LinearVecEBC
   MkStraightVecEBC :: StraightVecEBC -> LinearVecEBC
+instance Show LinearVecEBC where
+  show (MkDiagonalVecEBC x) = "an EBC-contained diagonal vec of " ++ show x
+  show (MkStraightVecEBC x) = "an EBC-contained straight vec of " ++ show x
+instance Show StraightVecEBC where
+  show (MkFilewiseVecEBC x) = "an EBC-contained filewise vec of " ++ show x
+  show (MkRankwiseVecEBC x) = "an EBC-contained rankwise vec of " ++ show x
+instance (Show a) => Show (LinearVec a) where
+  show (LinearVec b c) = "a LinearVec of count " ++ show c ++ " and direction " ++ show b
 instance InterfaceVecEBC StraightVecEBC where
   reverMaybeEBC (MkRankwiseVecEBC x) = MkRankwiseVecEBC <$> reverMaybe x
   reverMaybeEBC (MkFilewiseVecEBC x) = MkFilewiseVecEBC <$> reverMaybe x
@@ -235,7 +248,7 @@ class (Vec a, Reversable a) => ReversableVec a
 passTimes :: (a -> a) -> Count -> a -> a
 passTimes f Once a = f a
 passTimes f (OnceMore c) a = passTimes f c (f a)
-data Castling = QueensideCastling | KingsideCastling -- deriving (Vec)
+data Castling = QueensideCastling | KingsideCastling deriving Show -- deriving (Vec)
 emptiesForCastling :: Castling -> [SegmentEight]
 emptiesForCastling KingsideCastling = [fromJust $ plusEight kfm, passTimes (fromJust.plusEight) (OnceMore Once) kfm]
 emptiesForCastling QueensideCastling = [fromJust $ minusEight kfm, passTimes (fromJust.minusEight) (OnceMore Once) kfm,
@@ -262,7 +275,7 @@ instance Vec Castling where
   emptiesFrom from v = Just $ assert ( colorSegmFile (file from) == kfm )
                        (assert ( rank from == MostOuter ) (fmap (\x -> (MostOuter,File (segmColor $ file from) x))
                                                             (emptiesForCastling v)))
-data PawnJumpByTwo = PawnJumpByTwo --deriving (Vec)
+data PawnJumpByTwo = PawnJumpByTwo deriving Show --deriving (Vec)
 enPassantField :: File -> Pos
 enPassantField f = (MiddleOuter, f)
 enPassantFieldPos :: Pos -> Maybe Pos
@@ -306,7 +319,7 @@ _emptiesFromMust pp (LinearVec d c) = fromJust $ emptiesFrom pp (fromJust (tailI
 _addMaybe :: (LinearDirection a) => Maybe Pos -> LinearVec a -> Maybe Pos
 _addMaybe p m = do { jp <- p;
                      add jp m;}
-data KnightVec = KnightVec RankwiseDirection FilewiseDirection Orientation -- Orientation :: twice
+data KnightVec = KnightVec RankwiseDirection FilewiseDirection Orientation deriving Show -- Orientation :: twice
 -- instance Ord KnightVec
 instance Eq KnightVec where
   (KnightVec r f o) == (KnightVec rr ff oo) = (r==rr)&&(f==ff)&&(o==oo)
