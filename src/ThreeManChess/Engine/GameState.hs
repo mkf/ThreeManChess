@@ -12,4 +12,4 @@ data GameState = GameState {board :: GameBoard, moatsState :: MoatsState, movesN
                             enPassantStore :: EnPassantStore, halfMoveClock :: Maybe Count, fullMoveCounter :: Maybe Count, playersAlive :: PlayersAlive }
 newGame :: GameState
 newGame = GameState { board = startBoard, moatsState = noBridges, movesNext = White, castlingPossibilities = allCastling,
-                      enPassantStore = Nothing, halfMoveClock = Nothing, fullMoveCounter = Nothing, playersAlive = allAlive }
+                      enPassantStore = (Nothing, Nothing), halfMoveClock = Nothing, fullMoveCounter = Nothing, playersAlive = allAlive }
