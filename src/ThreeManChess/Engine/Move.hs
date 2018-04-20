@@ -241,7 +241,7 @@ isEmptyList _ = False
 checkIfCapturingThruMoats :: StateMove -> Bool
 checkIfCapturingThruMoats sm = checkIfDestOpponent sm && isEmptyList (moatsM (move sm))
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
-checkIfWeArePassingAnUnbridgedMoat sm = isEmptyList $ filter (Unbridged==) $ fmap (isBridged (moatsState (before sm))) $ moatsM $ move sm
+checkIfWeArePassingAnUnbridgedMoat sm = isEmptyList $ filter (Unbridged==) $ fmap (isBridged $ moatsState $ before sm) $ moatsM $ move sm
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
