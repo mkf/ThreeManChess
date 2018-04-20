@@ -322,9 +322,12 @@ data Impossibility where
 data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThruMoatException
 
 -- _threatCheckingHelperOne :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore
-_isThereAThreatHelperOne :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassantStore -> [MoveT] -> Bool
-_isThereAThreatHelperOne this toP fromP pA ePS vecs =
-  let bef = hypoConstruct this (lastEnP ePS) pA in False
+_isThereAThreatHelperOne :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassantStore -> Maybe Bool
+_isThereAThreatHelperOne this toP fromP pA ePS = do
+  figt <- fmap figType (this fromP);
+  Just $ let bef = hypoConstruct this (lastEnP ePS) pA in
+           let vecs = hypoMovesFromToWith figt fromP toP in
+             False
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
