@@ -178,8 +178,14 @@ checkIfSuchEnPassantPossibleMaybe sm = do
   Just $ whaCol == Just (matchToColFun ma who)
 checkIfEnPassantImpossibility :: StateMove -> Bool
 checkIfEnPassantImpossibility sm = checkIfIsEnPassant sm && not (checkIfSuchEnPassantPossible sm)
-checkIfCapturing :: StateMove -> Bool
-checkIfCapturing _ = error "Not implemented TODO"
+checkIfCapturingSimply :: StateMove -> Bool
+checkIfCapturingSimply sm = fromMaybe False $ _checkIfCapturingSimplyMaybe sm
+_checkIfCapturingSimplyMaybe :: StateMove -> Maybe Bool
+_checkIfCapturingSimplyMaybe sm = do
+  who <- whoMove sm;
+  tosm <- to (move sm);
+  oppo <- figColor <$> board (before sm) tosm;
+  Just $ oppo /= who
 checkIfCapturingOwnPiece :: StateMove -> Bool
 checkIfCapturingOwnPiece _ = error "Not implemented TODO"
 checkIfAllAreEmpties :: StateMove -> Bool
