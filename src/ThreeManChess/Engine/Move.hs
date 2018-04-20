@@ -114,6 +114,23 @@ moveFromVecWith OutwardPawn (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC 
 moveFromVecWith OutwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a) Once))) =
   Just $ Left (\x -> MkOutwardPawnMove (Capturing a, x))
 moveFromVecWith OutwardPawn _ = Nothing
+hypoMoveFromVecWith :: FigType -> VecEBC -> Maybe HypoCapMoveT
+hypoMoveFromVecWith Queen (MkLinearVecEBC x) = Just $ HypoQueenMove x
+hypoMoveFromVecWith Queen _  = Nothing
+hypoMoveFromVecWith King (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec a Once))) = Just $ HypoKingMove $ MkDiagonalDirecEBC a
+hypoMoveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec a Once)))) = Just $ HypoKingMove $ MkStraightDirecEBC $ MkRankwiseDirecEBC a
+hypoMoveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkFilewiseVecEBC (LinearVec a Once)))) = Just $ HypoKingMove $ MkStraightDirecEBC $ MkFilewiseDirecEBC a
+hypoMoveFromVecWith King _ = Nothing
+hypoMoveFromVecWith Rook (MkLinearVecEBC (MkStraightVecEBC a)) = Just $ HypoRookMove a
+hypoMoveFromVecWith Rook _ = Nothing
+hypoMoveFromVecWith Knight (MkKnightVecEBC a) = Just $ HypoKnightMove a
+hypoMoveFromVecWith Knight _ = Nothing
+hypoMoveFromVecWith Bishop (MkLinearVecEBC (MkDiagonalVecEBC a)) = Just $ HypoBishopMove a
+hypoMoveFromVecWith Bishop _ = Nothing
+hypoMoveFromVecWith InwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Inwards a) Once))) = Just $ HypoInwardPawnMove a
+hypoMoveFromVecWith InwardPawn _ = Nothing
+hypoMoveFromVecWith OutwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a) Once))) = Just $ HypoOutwardPawnMove a
+hypoMoveFromVecWith OutwardPawn _ = Nothing
 
 movesFromToWith :: FigType -> Pos -> Pos -> Color -> [Either (Maybe Promotion -> MoveT) MoveT]
 movesFromToWith ft f t c = fmap (fromJust . moveFromVecWith ft) (vecsFromToWith ft f t c)
