@@ -327,6 +327,11 @@ checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,File _ 
   | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
   | otherwise = True
 checkIfThereIsNoCreekAgainstUs _ = True
+hypoWouldBeNoCreak :: BoundHypoCapMoveT -> Bool
+hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,File _ se))
+  | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
+  | otherwise = True
+hypoWouldBeNoCreak _ = True
 
 data Impossibility where
   ThereIsACreakAgainstUs :: Impossibility
@@ -335,6 +340,8 @@ data Impossibility where
   ThereIsACastlingImpossibility :: Impossibility
   NotAllEmpties :: Impossibility
   WeAreCapturingOurOwnPiece :: Impossibility
+
+data HypoImpossibility = WouldBeCreak | WouldBeThruMoat | WouldNotAllEmpties | WouldBeSameColor
 
 data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThruMoatException
 
