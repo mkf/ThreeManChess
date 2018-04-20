@@ -235,10 +235,16 @@ checkIfAllAreEmpties sm = do
   Just $ checkEmpties (board (before sm)) empties
 checkCastlingImpossibility :: StateMove -> Bool
 checkCastlingImpossibility _ = error "Not implemented TODO"
+isEmptyList :: [a] -> Bool
+isEmptyList [] = True
+isEmptyList _ = False
 checkIfCapturingThruMoats :: StateMove -> Bool
-checkIfCapturingThruMoats _ = error "Not implemented TODO"
+checkIfCapturingThruMoats sm = checkIfDestOpponent sm && isEmptyList (moatsM (move sm))
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
-checkIfWeArePassingAnUnbridgedMoat _ = error "Not implemented TODO"
+checkIfWeArePassingAnUnbridgedMoat sm = isEmptyList $ filter (Unbridged==) $ fmap (isBridged (moatsState (before sm))) $ moatsM $ move sm
+
+moatsM :: BoundMoveT -> [MoatLocalization]
+moatsM (m, f) = moats f (vectorFromMoveT m)
 
 afterMoatsState :: StateMove -> MoatsState
 afterMoatsState _ = error "Not implemented TODO"
