@@ -153,7 +153,7 @@ checkIfFigTypeOK StateMove{move = (m,x), before = GameState {board=f}} =
        (MkKnightMove _) -> Knight
     )==).figType) (f x)
 checkIfFigColorOK :: StateMove -> Bool
-checkIfFigColorOK _ = error "Not implemented TODO"
+checkIfFigColorOK StateMove{move = (_,l), before = GameState {board=f, movesNext=c}} = maybe False ((c==).figColor) (f l)
 checkIfIsEnPassant :: StateMove -> Bool
 checkIfIsEnPassant _ = error "Not implemented TODO"
 checkIfEnPassantPossible :: StateMove -> Bool
