@@ -305,10 +305,12 @@ emptiesMT :: BoundMoveT -> Maybe [Pos]
 emptiesMT (m,f) = emptiesFromEBC f (vectorFromMoveT m)
 emptiesHMT :: BoundHypoCapMoveT -> Maybe [Pos]
 emptiesHMT (m,f) = emptiesFromEBC f (vectorFromHypoCapMoveT m)
-checkIfAllAreEmpties :: StateMove -> Maybe Bool
-checkIfAllAreEmpties sm = do
+checkIfAllAreEmptiesMaybe :: StateMove -> Maybe Bool
+checkIfAllAreEmptiesMaybe sm = do
   empties <- emptiesMT $ move sm;
   Just $ checkEmpties (board (before sm)) empties
+checkIfAllAreEmpties :: StateMove -> Bool
+checkIfAllAreEmpties sm = fromMaybe False (checkIfAllAreEmptiesMaybe sm)
 wouldBeAllEmpties :: HypoStateMove -> Maybe Bool
 wouldBeAllEmpties sm = do
   empties <- emptiesHMT $ hypoMove sm;
@@ -327,9 +329,9 @@ isEmptyList :: [a] -> Bool
 isEmptyList [] = True
 isEmptyList _ = False
 checkIfCapturingThruMoats :: StateMove -> Bool
-checkIfCapturingThruMoats sm = checkIfDestOpponent sm && isEmptyList (moatsM (move sm))
+checkIfCapturingThruMoats sm = checkIfDestOpponent sm && (not.isEmptyList) (moatsM (move sm))
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
-checkIfWeArePassingAnUnbridgedMoat sm = isEmptyList $ filter (Unbridged==) $ fmap (isBridged $ moatsState $ before sm) $ moatsM $ move sm
+checkIfWeArePassingAnUnbridgedMoat sm = not.isEmptyList $ filter (Unbridged==) $ fmap (isBridged $ moatsState $ before sm) $ moatsM $ move sm
 checkIfThereIsNoCreekAgainstUs :: BoundMoveT -> Bool
 checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,File _ se))
   | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
@@ -348,6 +350,16 @@ data Impossibility where
   ThereIsACastlingImpossibility :: Impossibility
   NotAllEmpties :: Impossibility
   WeAreCapturingOurOwnPiece :: Impossibility
+
+checkImpossibility :: StateMove -> Maybe Impossibility
+checkImpossibility sm
+  | not $ checkIfThereIsNoCreekAgainstUs (move sm) = Just ThereIsACreakAgainstUs
+  | checkIfWeArePassingAnUnbridgedMoat sm = Just WeArePassingAnUnbridgedMoat
+  | checkIfCapturingThruMoats sm = Just WeAreCapturingThruMoats
+  | not $ checkIfNoCastlingImpossibility sm = Just ThereIsACastlingImpossibility
+  | not $ checkIfAllAreEmpties sm = Just NotAllEmpties
+  | checkIfCapturingOwnPiece sm = Just WeAreCapturingOurOwnPiece
+  | otherwise = Nothing
 
 data HypoImpossibility = WouldBeCreak | WouldBeThruMoat | WouldNotAllEmpties | WouldBeSameColor
 
