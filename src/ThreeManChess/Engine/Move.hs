@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, DataKinds, ExistentialQuantification, GADTs #-}
+{-# LANGUAGE TypeFamilies, DataKinds, ExistentialQuantification, GADTs, DuplicateRecordFields #-}
 
 module ThreeManChess.Engine.Move where
 
@@ -19,7 +19,9 @@ import Data.Maybe
 
 data (Vec a) => BoundVec a = BoundVec a Pos
 
-data KingMove = AloneDiagonally DiagonalDirection | AloneRankwise RankwiseDirection | AloneFilewise FilewiseDirection | NotAlone Castling deriving (Eq, Show)
+type AloneKingMove = LinearDirecEBC
+-- data KingMove = AloneDiagonally DiagonalDirection | AloneRankwise RankwiseDirection | AloneFilewise FilewiseDirection | NotAlone Castling deriving (Eq, Show)
+data KingMove = Alone AloneKingMove | NotAlone Castling deriving (Eq, Show)
 data JustPawnMove = Forward | Capturing FilewiseDirection deriving (Eq, Show)
 data PossiblyJumpingPawnMove = Walk JustPawnMove | Jump deriving (Eq, Show)
 -- data Promotion = forall a . PromotionDesire a => Promotion FigType
@@ -38,9 +40,9 @@ type family Move (f :: FigType) where
 
 vectorFromMoveT :: MoveT -> VecEBC
 vectorFromMoveT (MkQueenMove x) = MkLinearVecEBC x
-vectorFromMoveT (MkKingMove (AloneDiagonally x)) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec x Once
-vectorFromMoveT (MkKingMove (AloneRankwise x)) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec x Once
-vectorFromMoveT (MkKingMove (AloneFilewise x)) = MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec x Once
+vectorFromMoveT (MkKingMove (Alone (MkDiagonalDirecEBC x))) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec x Once
+vectorFromMoveT (MkKingMove (Alone (MkStraightDirecEBC (MkRankwiseDirecEBC x)))) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec x Once
+vectorFromMoveT (MkKingMove (Alone (MkStraightDirecEBC (MkFilewiseDirecEBC x)))) = MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec x Once
 vectorFromMoveT (MkKingMove (NotAlone x)) = MkCastlingVecEBC x
 vectorFromMoveT (MkRookMove x) = MkLinearVecEBC $ MkStraightVecEBC x
 vectorFromMoveT (MkBishopMove x) = MkLinearVecEBC $ MkDiagonalVecEBC x
@@ -91,9 +93,11 @@ vecsFromToWith OutwardPawn a b _
 moveFromVecWith :: FigType -> VecEBC -> Maybe (Either (Maybe Promotion -> MoveT) MoveT)
 moveFromVecWith Queen (MkLinearVecEBC x) = Just $ Right $ MkQueenMove x
 moveFromVecWith Queen _ = Nothing
-moveFromVecWith King (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec a Once))) = Just $ Right $ MkKingMove (AloneDiagonally a)
-moveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec a Once)))) = Just $ Right $ MkKingMove (AloneRankwise a)
-moveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkFilewiseVecEBC (LinearVec a Once)))) = Just $ Right $ MkKingMove (AloneFilewise a)
+moveFromVecWith King (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec a Once))) = Just $ Right $ MkKingMove $ Alone $ MkDiagonalDirecEBC a
+moveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec a Once)))) =
+  Just $ Right $ MkKingMove $ Alone $ MkStraightDirecEBC $ MkRankwiseDirecEBC a
+moveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkFilewiseVecEBC (LinearVec a Once)))) =
+  Just $ Right $ MkKingMove $ Alone $ MkStraightDirecEBC $ MkFilewiseDirecEBC a
 moveFromVecWith King (MkCastlingVecEBC a) = Just $ Right $ MkKingMove $ NotAlone a
 moveFromVecWith King _ = Nothing
 moveFromVecWith Rook (MkLinearVecEBC (MkStraightVecEBC a)) = Just $ Right $ MkRookMove a
@@ -130,6 +134,18 @@ data MoveT where
   MkKnightMove :: Move 'Knight -> MoveT
   MkInwardPawnMove :: Move 'InwardPawn -> MoveT
   MkOutwardPawnMove :: Move 'OutwardPawn -> MoveT
+
+data HypoCapMoveT where
+  HypoQueenMove :: Move 'Queen -> HypoCapMoveT
+  HypoKingMove :: AloneKingMove -> HypoCapMoveT
+  HypoRookMove :: Move 'Rook -> HypoCapMoveT
+  HypoBishopMove :: Move 'Bishop -> HypoCapMoveT
+  HypoKnightMove :: Move 'Knight -> HypoCapMoveT
+  HypoInwardPawnMove :: FilewiseDirection -> HypoCapMoveT
+  HypoOutwardPawnMove :: FilewiseDirection -> HypoCapMoveT
+
+type BoundHypoCapMoveT = (HypoCapMoveT, Pos)
+data HypoStateMove = HypoStateMove {hypoMove :: BoundHypoCapMoveT, hypoState :: HypoCheckState}
 
 instance Eq MoveT where
   MkQueenMove x == MkQueenMove y = x==y
@@ -287,9 +303,8 @@ data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThru
 
 -- _threatCheckingHelperOne :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore
 _isThereAThreatHelperOne :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassantStore -> [MoveT] -> Bool
-_isThereAThreatHelperOne this to from pA ePS vecs =
-  let bef = GameState {board=this, moatsState = noBridges, movesNext = White, castlingPossibilities = noCastling, enPassantStore = (Nothing,Nothing),
-                       fullMoveCounter = Nothing, halfMoveClock = Nothing, playersAlive = pA} in False
+_isThereAThreatHelperOne this toP fromP pA ePS vecs =
+  let bef = hypoConstruct this (lastEnP ePS) pA in False
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)

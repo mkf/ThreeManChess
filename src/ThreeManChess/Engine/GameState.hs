@@ -17,7 +17,26 @@ newGame :: GameState
 newGame = GameState { board = startBoard, moatsState = noBridges, movesNext = White, castlingPossibilities = allCastling,
                       enPassantStore = (Nothing, Nothing), halfMoveClock = Nothing, fullMoveCounter = Nothing, playersAlive = allAlive }
 
-data HypoCheckState = HypoCheckState {board :: GameBoard, enPassantStore :: Maybe Pos, playersAlive :: PlayersAlive}
+-- data HypoCheckState = HypoCheckState {board :: GameBoard, enPassantStoreLast :: Maybe Pos, playersAlive :: PlayersAlive}
+type HypoCheckState = (GameBoard, Maybe Pos, PlayersAlive)
 
 gameToHypo :: GameState -> HypoCheckState
-gameToHypo GameState{board=b, enPassantStore=e, playersAlive=a} = HypoCheckState{board=b, enPassantStore= lastEnP e, playersAlive=a}
+-- gameToHypo GameState{board=b, enPassantStore=e, playersAlive=a} = HypoCheckState{board=b, enPassantStoreLast=lastEnP e, playersAlive=a}
+gameToHypo GameState{board=b, enPassantStore=e, playersAlive=a} = (b,lastEnP e, a)
+
+hypoBoard :: HypoCheckState -> GameBoard
+hypoBoard (x,_,_) = x
+hypoEnPassantLast :: HypoCheckState -> Maybe Pos
+hypoEnPassantLast (_,x,_) = x
+hypoPlayersAlive :: HypoCheckState -> PlayersAlive
+hypoPlayersAlive (_,_,x) = x
+hypoConstruct :: GameBoard -> Maybe Pos -> PlayersAlive -> HypoCheckState
+hypoConstruct a b c = (a,b,c)
+
+
+-- class GState a where
+--   board :: a -> GameBoard
+--   playersAlive :: a -> PlayersAlive
+
+-- instance GState GameState
+-- instance GState HypoCheckState
