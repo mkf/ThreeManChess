@@ -59,6 +59,8 @@ vectorFromPossiblyPromotedMoveT = either vectorFromPossiblyPromotedMoveTNoEither
 disregardPromotionPossibOfEither :: Either (Maybe Promotion -> MoveT) MoveT -> MoveT
 disregardPromotionPossibOfEither (Right x) = x
 disregardPromotionPossibOfEither (Left f) = f Nothing
+vectorFromHypoCapMoveT :: HypoCapMoveT -> VecEBC
+vectorFromHypoCapMoveT = vectorFromMoveT.disregardPromotionPossibOfEither.hypoMoveToNormalMove
 
 vecsFromToWith :: FigType -> Pos -> Pos -> Color -> [VecEBC]
 vecsFromToWith Queen a b _ = fmap MkLinearVecEBC (fromToLinear a b)
@@ -180,7 +182,7 @@ data HypoCapMoveT where
   HypoOutwardPawnMove :: FilewiseDirection -> HypoCapMoveT
 
 type BoundHypoCapMoveT = (HypoCapMoveT, Pos)
-data HypoStateMove = HypoStateMove {hypoMove :: BoundHypoCapMoveT, hypoState :: HypoCheckState}
+data HypoStateMove = HypoStateMove {hypoMove :: BoundHypoCapMoveT, hypoBefore :: HypoCheckState}
 
 instance Eq MoveT where
   MkQueenMove x == MkQueenMove y = x==y
@@ -301,10 +303,16 @@ checkIfCapturingOwnPiece :: StateMove -> Bool
 checkIfCapturingOwnPiece sm = not $ checkIfDestEmpty sm || checkIfDestOpponent sm
 emptiesMT :: BoundMoveT -> Maybe [Pos]
 emptiesMT (m,f) = emptiesFromEBC f (vectorFromMoveT m)
+emptiesHMT :: BoundHypoCapMoveT -> Maybe [Pos]
+emptiesHMT (m,f) = emptiesFromEBC f (vectorFromHypoCapMoveT m)
 checkIfAllAreEmpties :: StateMove -> Maybe Bool
 checkIfAllAreEmpties sm = do
   empties <- emptiesMT $ move sm;
   Just $ checkEmpties (board (before sm)) empties
+wouldBeAllEmpties :: HypoStateMove -> Maybe Bool
+wouldBeAllEmpties sm = do
+  empties <- emptiesHMT $ hypoMove sm;
+  Just $ checkEmpties (hypoBoard (hypoBefore sm)) empties
 checkIfNoCastlingImpossibility :: StateMove -> Bool
 checkIfNoCastlingImpossibility sm = fromMaybe True $ _checkCastlingImpossibilityMaybeHelper sm
 _extractCastling :: MoveT -> Maybe Castling
