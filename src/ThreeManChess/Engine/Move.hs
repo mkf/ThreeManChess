@@ -3,6 +3,7 @@
 module ThreeManChess.Engine.Move where
 
 import ThreeManChess.Engine.Pos
+import ThreeManChess.Engine.Figure
 import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.Possibilities
 import ThreeManChess.Engine.FigType
@@ -140,7 +141,17 @@ data StateMove = StateMove {move :: BoundMoveT, before :: GameState}
 
 --TODO not all of these must be boolean
 checkIfFigTypeOK :: StateMove -> Bool
-checkIfFigTypeOK _ = error "Not implemented TODO"
+checkIfFigTypeOK StateMove{move = (m,x), before = GameState {board=f}} =
+  maybe False
+  (((case m of
+       (MkQueenMove _) -> Queen
+       (MkKingMove _) -> King
+       (MkBishopMove _) -> Bishop
+       (MkRookMove _) -> Rook
+       (MkInwardPawnMove _) -> InwardPawn
+       (MkOutwardPawnMove _) -> OutwardPawn
+       (MkKnightMove _) -> Knight
+    )==).figType) (f x)
 checkIfFigColorOK :: StateMove -> Bool
 checkIfFigColorOK _ = error "Not implemented TODO"
 checkIfIsEnPassant :: StateMove -> Bool
