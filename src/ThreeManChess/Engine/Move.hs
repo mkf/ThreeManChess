@@ -135,6 +135,9 @@ hypoMoveFromVecWith OutwardPawn _ = Nothing
 movesFromToWith :: FigType -> Pos -> Pos -> Color -> [Either (Maybe Promotion -> MoveT) MoveT]
 movesFromToWith ft f t c = fmap (fromJust . moveFromVecWith ft) (vecsFromToWith ft f t c)
 
+hypoMovesFromToWith :: FigType -> Pos -> Pos -> [HypoCapMoveT]
+hypoMovesFromToWith ft f t = fmap fromJust $ filter isJust $ fmap (hypoMoveFromVecWith ft) (vecsFromToWith ft f t White)
+
 boundMovePromotionHelper :: Pos -> Either (Maybe Promotion -> MoveT) MoveT -> Either (Maybe Promotion -> BoundMoveT) BoundMoveT
 boundMovePromotionHelper (SecondOuter, f) (Left x) = Left (\y -> (x y, (SecondOuter, f)))
 boundMovePromotionHelper fr (Left x) = Right (x Nothing, fr)
