@@ -264,7 +264,7 @@ instance Vec Castling where
                                                             (emptiesForCastling v)))
 data PawnJumpByTwo = PawnJumpByTwo --deriving (Vec)
 enPassantField :: File -> Pos
-enPassantField f = (rankFromInt 2, f)
+enPassantField f = (MiddleOuter, f)
 enPassantFieldPos :: Pos -> Maybe Pos
 enPassantFieldPos (SecondOuter,f) = Just $ enPassantField f
 enPassantFieldPos _ = Nothing
