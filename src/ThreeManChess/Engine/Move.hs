@@ -9,6 +9,7 @@ import ThreeManChess.Engine.FigType
 import ThreeManChess.Engine.GameState
 import ThreeManChess.Engine.GameBoard
 import ThreeManChess.Engine.Board
+import ThreeManChess.Engine.Moats
 
 data (Vec a) => BoundVec a = BoundVec a Pos
 
@@ -155,6 +156,14 @@ checkIfCapturingThruMoats :: StateMove -> Bool
 checkIfCapturingThruMoats _ = error "Not implemented TODO"
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
 checkIfWeArePassingAnUnbridgedMoat _ = error "Not implemented TODO"
+
+afterMoatsState :: StateMove -> MoatsState
+afterMoatsState _ = error "Not implemented TODO"
+enPassantFieldPosBM :: BoundMoveT -> Maybe Pos
+enPassantFieldPosBM (MkInwardPawnMove Jump, f) = Just $ enPassantFieldPos f
+enPassantFieldPosBM _ = Nothing
+afterEnPassantStore :: StateMove -> EnPassantStore
+afterEnPassantStore (m,GameState{enPassantStore=x}) = mappEnP (enPassantFieldPosBM m) x
 
 -- afterFirstStageHelper :: StateMove -> Maybe GameState
 -- afterFirstStageHelper (StateMove (MkQueenMove x, f) bef) = Nothing
