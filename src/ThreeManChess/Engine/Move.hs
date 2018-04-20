@@ -178,8 +178,8 @@ checkIfSuchEnPassantPossibleMaybe sm = do
   Just $ whaCol == Just (matchToColFun ma who)
 checkIfEnPassantImpossibility :: StateMove -> Bool
 checkIfEnPassantImpossibility sm = checkIfIsEnPassant sm && not (checkIfSuchEnPassantPossible sm)
-checkIfCapturingSimply :: StateMove -> Bool
-checkIfCapturingSimply sm = fromMaybe False $ _checkIfCapturingSimplyMaybe sm
+checkIfDestOpponent :: StateMove -> Bool
+checkIfDestOpponent sm = fromMaybe False $ _checkIfCapturingSimplyMaybe sm
 _checkIfCapturingSimplyMaybe :: StateMove -> Maybe Bool
 _checkIfCapturingSimplyMaybe sm = do
   who <- whoMove sm;
