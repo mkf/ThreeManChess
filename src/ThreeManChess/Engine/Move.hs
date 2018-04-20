@@ -52,6 +52,10 @@ vectorFromMoveT (MkInwardPawnMove (Walk (Capturing x))) = MkLinearVecEBC $ MkDia
 vectorFromMoveT (MkInwardPawnMove Jump) = MkPawnJumpByTwoVecEBC PawnJumpByTwo
 vectorFromMoveT (MkOutwardPawnMove (Forward,_)) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Outwards Once
 vectorFromMoveT (MkOutwardPawnMove (Capturing x,_)) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards x) Once
+vectorFromPossiblyPromotedMoveTNoEither :: (Maybe Promotion -> MoveT) -> VecEBC
+vectorFromPossiblyPromotedMoveTNoEither f = vectorFromMoveT (f Nothing)
+vectorFromPossiblyPromotedMoveT :: Either (Maybe Promotion -> MoveT) MoveT -> VecEBC
+vectorFromPossiblyPromotedMoveT = either vectorFromPossiblyPromotedMoveTNoEither vectorFromMoveT
 
 vecsFromToWith :: FigType -> Pos -> Pos -> Color -> [VecEBC]
 vecsFromToWith Queen a b _ = fmap MkLinearVecEBC (fromToLinear a b)
