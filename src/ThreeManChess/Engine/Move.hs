@@ -249,6 +249,8 @@ checkIfFigColorOK :: StateMove -> Bool
 checkIfFigColorOK StateMove{move = (_,l), before = GameState {board=f, movesNext=c}} = maybe False ((c==).figColor) (f l)
 whoMove :: StateMove -> Maybe Color
 whoMove StateMove{move = (_,l), before = GameState {board=f}} = fmap figColor (f l)
+whoHypoMove :: HypoStateMove -> Maybe Color
+whoHypoMove HypoStateMove{hypoMove = (_,l), hypoBefore = (f,_,_)} = fmap figColor (f l)
 checkIfIsEnPassant :: StateMove -> Bool
 checkIfIsEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> (do tosm <- to (move sm); Just $ isNothing $ board (before sm) tosm) == Just True
@@ -281,6 +283,16 @@ _checkIfCapturingSimplyMaybe sm = do
   Just $ oppo /= who
 checkIfDestEmpty :: StateMove -> Bool
 checkIfDestEmpty sm = (Nothing==) $ board (before sm) <$> to (move sm)
+wouldBeDestEmpty :: HypoStateMove -> Bool
+wouldBeDestEmpty sm = (Nothing==) $ hypoBoard (hypoBefore sm) <$> hTo (hypoMove sm)
+_wouldBeDestOpponentSimplyMaybe :: HypoStateMove -> Maybe Bool
+_wouldBeDestOpponentSimplyMaybe sm = do
+  who <- whoHypoMove sm;
+  tosm <- hTo (hypoMove sm);
+  oppo <- figColor <$> hypoBoard (hypoBefore sm) tosm;
+  Just $ oppo /= who
+wouldBeDestOpponent :: HypoStateMove -> Bool
+wouldBeDestOpponent sm = fromMaybe False $ _wouldBeDestOpponentSimplyMaybe sm
 data EmptyOrOccupiedUnlessEnPassant = Empty | OccupiedUnlessEnPassant deriving (Eq, Show)
 mustDestBeEmptyOrOccupied :: MoveT -> Maybe EmptyOrOccupiedUnlessEnPassant
 mustDestBeEmptyOrOccupied (MkInwardPawnMove (Walk Forward)) = Just Empty
@@ -311,10 +323,12 @@ checkIfAllAreEmptiesMaybe sm = do
   Just $ checkEmpties (board (before sm)) empties
 checkIfAllAreEmpties :: StateMove -> Bool
 checkIfAllAreEmpties sm = fromMaybe False (checkIfAllAreEmptiesMaybe sm)
-wouldBeAllEmpties :: HypoStateMove -> Maybe Bool
-wouldBeAllEmpties sm = do
+_wouldBeAllEmptiesMaybe :: HypoStateMove -> Maybe Bool
+_wouldBeAllEmptiesMaybe sm = do
   empties <- emptiesHMT $ hypoMove sm;
   Just $ checkEmpties (hypoBoard (hypoBefore sm)) empties
+wouldBeAllEmpties :: HypoStateMove -> Bool
+wouldBeAllEmpties sm = fromMaybe False $ _wouldBeAllEmptiesMaybe sm
 checkIfNoCastlingImpossibility :: StateMove -> Bool
 checkIfNoCastlingImpossibility sm = fromMaybe True $ _checkCastlingImpossibilityMaybeHelper sm
 _extractCastling :: MoveT -> Maybe Castling
@@ -330,6 +344,8 @@ isEmptyList [] = True
 isEmptyList _ = False
 checkIfCapturingThruMoats :: StateMove -> Bool
 checkIfCapturingThruMoats sm = checkIfDestOpponent sm && (not.isEmptyList) (moatsM (move sm))
+wouldBeThruMoats :: BoundHypoCapMoveT -> Bool
+wouldBeThruMoats sm = not.isEmptyList $ moatsHM sm
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
 checkIfWeArePassingAnUnbridgedMoat sm = not.isEmptyList $ filter (Unbridged==) $ fmap (isBridged $ moatsState $ before sm) $ moatsM $ move sm
 checkIfThereIsNoCreekAgainstUs :: BoundMoveT -> Bool
@@ -361,7 +377,16 @@ checkImpossibility sm
   | checkIfCapturingOwnPiece sm = Just WeAreCapturingOurOwnPiece
   | otherwise = Nothing
 
-data HypoImpossibility = WouldBeCreak | WouldBeThruMoat | WouldNotAllEmpties | WouldBeSameColor
+data HypoImpossibility = WouldBeCreak | WouldBeThruMoat | WouldNotAllEmpties | WouldBeSameColor | WouldGoToEmpty
+
+checkHypoImpossibility :: HypoStateMove -> Maybe HypoImpossibility
+checkHypoImpossibility sm
+  | not $ hypoWouldBeNoCreak (hypoMove sm) = Just WouldBeCreak
+  | wouldBeThruMoats (hypoMove sm) = Just WouldBeThruMoat
+  | not $ wouldBeAllEmpties sm = Just WouldNotAllEmpties
+  | wouldBeDestEmpty sm = Just WouldGoToEmpty
+  | not $ wouldBeDestOpponent sm = Just WouldBeSameColor
+  | otherwise = Nothing
 
 data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThruMoatException
 
@@ -376,6 +401,8 @@ _isThereAThreatHelperOne this toP fromP pA ePS = do
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
+moatsHM :: BoundHypoCapMoveT -> [MoatLocalization]
+moatsHM (m, f) = moats f (vectorFromHypoCapMoveT m)
 
 afterMoatsState :: StateMove -> MoatsState
 afterMoatsState _ = error "Not implemented TODO"
