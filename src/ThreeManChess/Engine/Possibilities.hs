@@ -5,32 +5,20 @@
 module ThreeManChess.Engine.Possibilities where
 
 import Control.Exception
-import Data.Data
+-- import Data.Data
 import Data.Maybe
 import ThreeManChess.Engine.Pos
 import ThreeManChess.Engine.Color
-import ThreeManChess.Engine.Figure
-import ThreeManChess.Engine.FigType
+-- import ThreeManChess.Engine.Figure
+-- import ThreeManChess.Engine.FigType
+import ThreeManChess.Engine.Moats
+import ThreeManChess.Engine.Directions
 
-class --(Eq a , Read a, Show a) =>
-  Reversable a where
-  rever :: a -> a
+
 class (Reversable a, Eq a-- , Ord a
       ) => LinearDirection a where
   tailRankInvol :: LinearVec a -> Maybe (Either (Rank -> LinearVec a) (LinearVec a))
   addOne :: a -> Pos -> Maybe Pos
-data Orientation = Rankwise | Filewise deriving (Eq, Read, Show)
-perpendicularTo :: Orientation -> Orientation
-perpendicularTo Rankwise = Filewise
-perpendicularTo Filewise = Rankwise
-class (LinearDirection a) => StraightDirection a where
-  orientation :: a -> Orientation
-data RankwiseDirection = Inwards | Outwards deriving (Data, Typeable, Show)-- deriving StraightDirection
-instance Reversable RankwiseDirection where
-  rever Inwards = Outwards
-  rever Outwards = Inwards
-instance StraightDirection RankwiseDirection where
-  orientation _ = Rankwise
 instance LinearDirection RankwiseDirection where
   tailRankInvol (LinearVec _ Once) = Nothing
   tailRankInvol (LinearVec Inwards (OnceMore c)) = Just $ Left (\x -> LinearVec (case x of MostInner -> Outwards
@@ -41,34 +29,10 @@ instance LinearDirection RankwiseDirection where
   addOne Outwards (rank, file) =
     do { o <- out rank;
          return (o, file) }
-instance Eq RankwiseDirection where
-  Inwards == Inwards = True
-  Outwards == Outwards = True
-  Inwards == Outwards = False
-  Outwards == Inwards = False
-data FilewiseDirection = Pluswards | Minuswards deriving (Data, Typeable, Show)-- deriving StraightDirection
-instance Reversable FilewiseDirection where
-  rever Pluswards = Minuswards
-  rever Minuswards = Pluswards
-instance StraightDirection FilewiseDirection where
-  orientation _ = Filewise
-filewiseInc :: FilewiseDirection -> File -> File
-filewiseInc Pluswards = plus
-filewiseInc Minuswards = minus
 instance LinearDirection FilewiseDirection where
   tailRankInvol (LinearVec _ Once) = Nothing
   tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
   addOne w (rank, file) = Just (rank, filewiseInc w file)
-instance Eq FilewiseDirection where
-  Pluswards == Pluswards = True
-  Minuswards == Minuswards = True
-  Pluswards == Minuswards = False
-  Minuswards == Pluswards = False
-data DiagonalDirection = DiagonalDirection RankwiseDirection FilewiseDirection deriving Show -- deriving LinearDirection
-rankwise :: DiagonalDirection -> RankwiseDirection
-rankwise (DiagonalDirection x _) = x
-filewise :: DiagonalDirection -> FilewiseDirection
-filewise (DiagonalDirection _ x) = x
 instance LinearDirection DiagonalDirection where
   tailRankInvol (LinearVec _ Once) = Nothing
   tailRankInvol (LinearVec (DiagonalDirection Inwards f) (OnceMore c)) =
@@ -111,50 +75,19 @@ instance LinearDirection DiagonalDirection where
   addOne (DiagonalDirection Inwards p) (rank, file) = Just (inw rank, filewiseInc p file)
   addOne (DiagonalDirection Outwards p) (rank, file) =
     do { o <- out rank; return (o, filewiseInc p file)}
-instance Eq DiagonalDirection where
-  (DiagonalDirection a b) == (DiagonalDirection c d) = (a == c) && (b == d)
-instance Reversable DiagonalDirection where
-  rever (DiagonalDirection a b) = DiagonalDirection (rever a) (rever b)
-data Count = Once | OnceMore Count deriving (Eq, Read, Show)
-addCount :: Count -> Count -> Count
-addCount Once Once = OnceMore Once
-addCount a Once = OnceMore a
-addCount Once a = OnceMore a
-addCount (OnceMore a) (OnceMore b) = OnceMore $ OnceMore $ addCount a b
-countFromPositiveInteger :: Integer -> Maybe Count
-countFromPositiveInteger 1 = Just Once
-countFromPositiveInteger a | a>1 = OnceMore <$> countFromPositiveInteger (a-1)
-                           | otherwise = Nothing
-data PlusMinus a = Plus a | Minus a deriving (Eq, Read, Show)
-absPlusMinus :: PlusMinus a -> a
-absPlusMinus (Plus a) = a
-absPlusMinus (Minus a) = a
-substractCount :: Count -> Count -> Maybe (PlusMinus Count)
-substractCount Once Once = Nothing
-substractCount (OnceMore a) Once = Just $ Plus a
-substractCount Once (OnceMore a) = Just $ Minus a
-substractCount (OnceMore a) (OnceMore b) = substractCount a b
-absSubstractCount :: Count -> Count -> Maybe Count
-absSubstractCount = curry $ fmap absPlusMinus . uncurry substractCount
-nonNegativeSubstractCount :: Count -> Count -> Maybe Count
-nonNegativeSubstractCount Once Once = Nothing
-nonNegativeSubstractCount (OnceMore a) Once = Just a
-nonNegativeSubstractCount (OnceMore a) (OnceMore b) = nonNegativeSubstractCount a b
-nonNegativeSubstractCount _ _ = undefined
-positiveSubstractCount :: Count -> Count -> Count
-positiveSubstractCount (OnceMore a) Once = a
-positiveSubstractCount (OnceMore a) (OnceMore b) = positiveSubstractCount a b
-positiveSubstractCount _ _ = undefined
-instance Ord Count where
-  Once `compare` Once = EQ
-  OnceMore a `compare` OnceMore b = a `compare` b
-  Once `compare` OnceMore _ = LT
-  OnceMore _ `compare` Once = GT
+class (LinearDirection a) => StraightDirection a where
+  orientation :: a -> Orientation
+instance StraightDirection RankwiseDirection where
+  orientation _ = Rankwise
+instance StraightDirection FilewiseDirection where
+  orientation _ = Filewise
+
 class (Eq a-- , Read a, Show a
       ) => Vec a where
   reverMaybe :: a -> Maybe a
   add :: Pos -> a -> Maybe Pos
   emptiesFrom :: Pos -> a -> Maybe [Pos]
+--  moats :: Pos -> a -> [MoatLocalization]
 class (Eq a, Show a -- , Read a
       ) => InterfaceVecEBC a where
   reverMaybeEBC :: a -> Maybe a
@@ -164,6 +97,10 @@ class (Eq a, Show a -- , Read a
   flipEmptiesFromEBC :: a -> Pos -> Maybe [Pos]
   emptiesFromEBC :: Pos -> a -> Maybe [Pos]
   emptiesFromEBC = flip flipEmptiesFromEBC
+  moats :: Pos -> a -> [MoatLocalization]
+--  moatsEBC :: Pos -> a -> [MoatLocalization]
+--  flipMoatsEBC :: a -> Pos -> [MoatLocalization]
+--  moatsEBC = flip flipMoatsEBC
 -- data VecC = forall a . Vec a => MkVecC a
 data VecC where
   MkVecC :: Vec a => a -> VecC
@@ -207,6 +144,9 @@ instance InterfaceVecEBC StraightVecEBC where
   flipAddEBC (MkFilewiseVecEBC x) = flip add x
   flipEmptiesFromEBC (MkRankwiseVecEBC x) = flip emptiesFrom x
   flipEmptiesFromEBC (MkFilewiseVecEBC x) = flip emptiesFrom x
+  moats _ (MkRankwiseVecEBC _) = []
+--  flipMoatsEBC (MkRankwiseVecEBC x) = flip moats x
+--  flipMoatsEBC (MkFilewiseVecEBC x) = flip moats x
 instance InterfaceVecEBC LinearVecEBC where
   reverMaybeEBC (MkStraightVecEBC x) = MkStraightVecEBC <$> reverMaybeEBC x
   reverMaybeEBC (MkDiagonalVecEBC x) = MkDiagonalVecEBC <$> reverMaybe x
@@ -214,6 +154,10 @@ instance InterfaceVecEBC LinearVecEBC where
   flipAddEBC (MkDiagonalVecEBC x) = flip add x
   flipEmptiesFromEBC (MkStraightVecEBC x) = flipEmptiesFromEBC x
   flipEmptiesFromEBC (MkDiagonalVecEBC x) = flip emptiesFrom x
+--  flipMoatsEBC (MkStraightVecEBC x) = flip moats x
+--  flipMoatsEBC (MkDiagonalVecEBC x) = flip moats x
+  moats a (MkDiagonalVecEBC x) = moatsDiagonal a x
+  moats a (MkStraightVecEBC x) = moats a x
 instance InterfaceVecEBC VecEBC where
   reverMaybeEBC (MkLinearVecEBC x) = MkLinearVecEBC <$> reverMaybeEBC x
   reverMaybeEBC (MkKnightVecEBC x) = MkKnightVecEBC <$> reverMaybe x
@@ -227,6 +171,12 @@ instance InterfaceVecEBC VecEBC where
   flipEmptiesFromEBC (MkKnightVecEBC x) = flip emptiesFrom x
   flipEmptiesFromEBC (MkCastlingVecEBC x) = flip emptiesFrom x
   flipEmptiesFromEBC (MkPawnJumpByTwoVecEBC x) = flip emptiesFrom x
+  moats _ (MkCastlingVecEBC _) = []
+  moats _ (MkPawnJumpByTwoVecEBC _) = []
+  -- flipMoatsEBC (MkLinearVecEBC x) = flip moats x
+  -- flipMoatsEBC (MkKnightVecEBC x) = flip moats x
+  -- flipMoatsEBC (MkCastlingVecEBC x) = flip moats x
+  -- flipMoatsEBC (MkPawnJumpByTwoVecEBC x) = flip moats x
 instance Eq StraightVecEBC where
   (MkRankwiseVecEBC x) == (MkRankwiseVecEBC y) = x==y
   (MkFilewiseVecEBC x) == (MkFilewiseVecEBC y) = x==y
@@ -313,6 +263,30 @@ instance (LinearDirection a) => Vec (LinearVec a) where
   add p m = foldl _addMaybe (Just p) (unitsInvolRank m (rank p))
   emptiesFrom _ (LinearVec _ Once) = Just []
   emptiesFrom p (LinearVec d c) =  addOne d p >>= (\pp -> Just $ pp:_emptiesFromMust pp (LinearVec d c))
+
+moatsDiagonal :: Pos -> LinearVec DiagonalDirection -> [MoatLocalization]
+moatsDiagonal p x = maybeToList $ moatDiagonal p x
+
+moatDiagonal :: Pos -> LinearVec DiagonalDirection -> Maybe MoatLocalization
+moatDiagonal (MostOuter, File col (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf))
+  (LinearVec (DiagonalDirection Inwards Pluswards) _) = Just $ onDirecLoc Pluswards col
+moatDiagonal (MostOuter, File col (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf))
+  (LinearVec (DiagonalDirection Inwards Minuswards) _) = Just $ onDirecLoc Minuswards col
+moatDiagonal f (LinearVec (DiagonalDirection Outwards Pluswards) c) =
+  do tove <- add f (LinearVec (DiagonalDirection Outwards Pluswards) c);
+     if rank tove == MostOuter then
+       case file tove of
+         File col (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) -> Just $ onDirecLoc Minuswards col
+         _ -> Nothing
+     else Nothing
+moatDiagonal f (LinearVec (DiagonalDirection Outwards Minuswards) c) =
+  do tove <- add f (LinearVec (DiagonalDirection Outwards Minuswards) c);
+     if rank tove == MostOuter then
+       case file tove of
+         File col (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) -> Just $ onDirecLoc Pluswards col
+         _ -> Nothing
+     else Nothing
+moatDiagonal _ _ = Nothing
 _emptiesFromMust :: (LinearDirection a) => Pos -> LinearVec a -> [Pos]
 _emptiesFromMust _ (LinearVec _ Once) = []
 _emptiesFromMust pp (LinearVec d c) = fromJust $ emptiesFrom pp (fromJust (tailInvolRank (LinearVec d c)) (rank pp))
