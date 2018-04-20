@@ -160,8 +160,14 @@ checkIfIsEnPassant :: StateMove -> Bool
 checkIfIsEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> (do tosm <- to (move sm); Just $ isNothing $ board (before sm) tosm) == Just True
   _ -> False
-checkIfEnPassantPossible :: StateMove -> Bool
-checkIfEnPassantPossible _ = error "Not implemented TODO"
+whatColorThereIsPawnToEnPassant :: StateMove -> Maybe (Maybe Color)
+whatColorThereIsPawnToEnPassant sm = case fst $ move sm of
+  MkOutwardPawnMove (Capturing _,Nothing) -> do epsm <- enPassantFieldPosBM (move sm); Just $ figColor <$> board (before sm) epsm
+  _ -> Nothing
+checkIfSuchEnPassantPossible :: StateMove -> Bool
+checkIfSuchEnPassantPossible _ = error "Not implemented TODO"
+checkIfEnPassantImpossibility :: StateMove -> Bool
+checkIfEnPassantImpossibility _ = error "Not implemented TODO"
 checkIfCapturing :: StateMove -> Bool
 checkIfCapturing _ = error "Not implemented TODO"
 checkIfCapturingOwnPiece :: StateMove -> Bool
