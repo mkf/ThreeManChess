@@ -8,7 +8,8 @@ import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.Possibilities
 import ThreeManChess.Engine.FigType
 import ThreeManChess.Engine.GameState
--- import ThreeManChess.Engine.GameBoard
+import ThreeManChess.Engine.GameBoard
+import ThreeManChess.Engine.PlayersAlive
 import ThreeManChess.Engine.Board
 import ThreeManChess.Engine.Moats
 import ThreeManChess.Engine.CastlingPossibilities
@@ -225,6 +226,24 @@ _checkIfCapturingSimplyMaybe sm = do
   Just $ oppo /= who
 checkIfDestEmpty :: StateMove -> Bool
 checkIfDestEmpty sm = (Nothing==) $ board (before sm) <$> to (move sm)
+data EmptyOrOccupiedUnlessEnPassant = Empty | OccupiedUnlessEnPassant deriving (Eq, Show)
+mustDestBeEmptyOrOccupied :: MoveT -> Maybe EmptyOrOccupiedUnlessEnPassant
+mustDestBeEmptyOrOccupied (MkInwardPawnMove (Walk Forward)) = Just Empty
+mustDestBeEmptyOrOccupied (MkQueenMove _) = Nothing
+mustDestBeEmptyOrOccupied (MkKingMove (NotAlone _)) = Just Empty
+mustDestBeEmptyOrOccupied (MkKingMove _) = Nothing
+mustDestBeEmptyOrOccupied (MkKnightMove _) = Nothing
+mustDestBeEmptyOrOccupied (MkRookMove _) = Nothing
+mustDestBeEmptyOrOccupied (MkBishopMove _) = Nothing
+mustDestBeEmptyOrOccupied (MkInwardPawnMove (Walk (Capturing _))) = Just OccupiedUnlessEnPassant
+mustDestBeEmptyOrOccupied (MkInwardPawnMove Jump) = Just Empty
+mustDestBeEmptyOrOccupied (MkOutwardPawnMove (Capturing _,_)) = Just OccupiedUnlessEnPassant
+mustDestBeEmptyOrOccupied (MkOutwardPawnMove (Forward,_)) = Just Empty
+mustDestBeEmpty :: MoveT -> Bool
+mustDestBeEmpty x = mustDestBeEmptyOrOccupied x == Just Empty
+mustDestBeOccupiedUnlessEnPassant :: MoveT -> Bool
+mustDestBeOccupiedUnlessEnPassant x = mustDestBeEmptyOrOccupied x == Just OccupiedUnlessEnPassant
+
 checkIfCapturingOwnPiece :: StateMove -> Bool
 checkIfCapturingOwnPiece sm = not $ checkIfDestEmpty sm || checkIfDestOpponent sm
 emptiesMT :: BoundMoveT -> Maybe [Pos]
@@ -255,6 +274,22 @@ checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,File _ 
   | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
   | otherwise = True
 checkIfThereIsNoCreekAgainstUs _ = True
+
+data Impossibility where
+  ThereIsACreakAgainstUs :: Impossibility
+  WeArePassingAnUnbridgedMoat :: Impossibility
+  WeAreCapturingThruMoats :: Impossibility
+  ThereIsACastlingImpossibility :: Impossibility
+  NotAllEmpties :: Impossibility
+  WeAreCapturingOurOwnPiece :: Impossibility
+
+data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThruMoatException
+
+-- _threatCheckingHelperOne :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore
+_isThereAThreatHelperOne :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassantStore -> [MoveT] -> Bool
+_isThereAThreatHelperOne this to from pA ePS vecs =
+  let bef = GameState {board=this, moatsState = noBridges, movesNext = White, castlingPossibilities = noCastling, enPassantStore = (Nothing,Nothing),
+                       fullMoveCounter = Nothing, halfMoveClock = Nothing, playersAlive = pA} in False
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
