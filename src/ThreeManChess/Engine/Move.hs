@@ -216,6 +216,8 @@ from :: (a,Pos) -> Pos
 from = snd
 to :: BoundMoveT -> Maybe Pos
 to (m,f) = addEBC f $ vectorFromMoveT m
+hTo :: BoundHypoCapMoveT -> Maybe Pos
+hTo (m,f) = addEBC f $ vectorFromMoveT $ disregardPromotionPossibOfEither $ hypoMoveToNormalMove m
 checkIfPromotionPresenceIsOKforOP :: BoundMove 'OutwardPawn -> Bool
 checkIfPromotionPresenceIsOKforOP ((_,Just _),(SecondOuter,_)) = True
 checkIfPromotionPresenceIsOKforOP ((_,Nothing),_) = True
@@ -341,8 +343,9 @@ _isThereAThreatHelperOne :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassant
 _isThereAThreatHelperOne this toP fromP pA ePS = do
   figt <- fmap figType (this fromP);
   Just $ let bef = hypoConstruct this (lastEnP ePS) pA in
-           let vecs = hypoMovesFromToWith figt fromP toP in
-             False
+           let vemovs = hypoMovesFromToWith figt fromP toP in
+             let vecs = vectorFromMoveT . disregardPromotionPossibOfEither . hypoMoveToNormalMove <$> vemovs in
+               False
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
