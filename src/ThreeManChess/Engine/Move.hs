@@ -13,6 +13,7 @@ import ThreeManChess.Engine.Board
 import ThreeManChess.Engine.Moats
 import ThreeManChess.Engine.CastlingPossibilities
 import ThreeManChess.Engine.EnPassantStore
+import ThreeManChess.Engine.Directions
 import Data.Maybe
 
 data (Vec a) => BoundVec a = BoundVec a Pos
