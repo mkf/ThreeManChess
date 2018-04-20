@@ -11,6 +11,12 @@ prevEnP = fst
 lastEnP :: EnPassantStore -> Maybe Pos
 lastEnP = snd
 
+data EnPassantMatch = PrevMatch | LastMatch
+matchEnP :: EnPassantStore -> Pos -> Maybe EnPassantMatch
+matchEnP s p | prevEnP s == Just p = Just PrevMatch
+             | lastEnP s == Just p = Just LastMatch
+             | otherwise = Nothing
+
 mappEnP :: Maybe Pos -> EnPassantStore -> EnPassantStore
 mappEnP a (_, b) = (b, a)
 
