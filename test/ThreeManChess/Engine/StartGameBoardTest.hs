@@ -6,6 +6,8 @@ import Test.Framework.Providers.HUnit
 -- import Test.QuickCheck
 import ThreeManChess.Engine.GameBoard
 import ThreeManChess.Engine.Pos
+import ThreeManChess.Engine.Possibilities
+import ThreeManChess.Engine.PosIterator
 import ThreeManChess.Engine.Figure
 import ThreeManChess.Engine.FigType
 import ThreeManChess.Engine.Color
@@ -37,7 +39,11 @@ a2a3Test = [(MkInwardPawnMove (Walk Forward), (SecondOuter, File White theAFileA
            (MiddleOuter, File White theAFileA)
            White
 
+noZeroDiagonalMoves :: Assertion
+noZeroDiagonalMoves = fmap (const (Nothing,Nothing)) allPos @=? fmap (\x -> fromToDiagonals x x) allPos
+
 tests :: [Test.Framework.Test]
 tests = [testCase "whiteKingTest" whiteKingTest,
          testCase "figTypeAndColorOKTest" figTypeAndColorOKTest,
-         testCase "a2a3Test" a2a3Test]
+         testCase "a2a3Test" a2a3Test,
+         testCase "noZeroDiagonalMoves" noZeroDiagonalMoves]
