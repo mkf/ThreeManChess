@@ -42,8 +42,12 @@ a2a3Test = [(MkInwardPawnMove (Walk Forward), (SecondOuter, File White theAFileA
 noZeroDiagonalMoves :: Assertion
 noZeroDiagonalMoves = fmap (const (Nothing,Nothing)) allPos @=? fmap (\x -> fromToDiagonals x x) allPos
 
+noZeroFilewiseMoves :: Assertion
+noZeroFilewiseMoves = fmap (const Nothing) allFilesFromZero @=? fmap (\x -> fromToFiles (x,x)) allFilesFromZero
+
 tests :: [Test.Framework.Test]
 tests = [testCase "whiteKingTest" whiteKingTest,
          testCase "figTypeAndColorOKTest" figTypeAndColorOKTest,
          testCase "a2a3Test" a2a3Test,
-         testCase "noZeroDiagonalMoves" noZeroDiagonalMoves]
+         testCase "noZeroDiagonalMoves" noZeroDiagonalMoves,
+         testCase "noZeroFilewiseMoves" noZeroFilewiseMoves]
