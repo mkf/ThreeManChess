@@ -175,6 +175,17 @@ afterColorCastling b (MkRookMove _, (MostOuter, File cof seg)) coi
   | coi==cof && seg==SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf = casOff KingsideCastling b
   | otherwise = b
 afterColorCastling b _ _ = b
+afterCastling :: CastlingPossibilities -> BoundMoveT -> Color -> Maybe CastlingPossibilities
+afterCastling b mb coi =
+  do tomb <- to mb;
+     Just $
+       let caspo = castlingSetColor b coi $ afterColorCastling (castlingGetColor b coi) mb coi in
+         if rank tomb /= MostOuter then caspo
+         else case colorSegmFile (file tomb) of
+                SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf -> casOffC (segmColor (file tomb)) KingsideCastling caspo
+                SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf -> casOffC (segmColor (file tomb)) QueensideCastling caspo
+                a | a==kfm -> castlingSetColor caspo (segmColor (file tomb)) noCastlingForColor
+                _ -> caspo
 
 -- afterFirstStageHelper :: StateMove -> Maybe GameState
 -- afterFirstStageHelper (StateMove (MkQueenMove x, f) bef) = Nothing
