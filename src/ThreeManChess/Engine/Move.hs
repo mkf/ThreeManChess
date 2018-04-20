@@ -189,7 +189,7 @@ _checkIfCapturingSimplyMaybe sm = do
 checkIfDestEmpty :: StateMove -> Bool
 checkIfDestEmpty sm = (Nothing==) $ board (before sm) <$> to (move sm)
 checkIfCapturingOwnPiece :: StateMove -> Bool
-checkIfCapturingOwnPiece _ = error "Not implemented TODO"
+checkIfCapturingOwnPiece sm = not $ checkIfDestEmpty sm || checkIfDestOpponent sm
 checkIfAllAreEmpties :: StateMove -> Bool
 checkIfAllAreEmpties _ = error "Not implemented TODO"
 checkCastlingImpossibility :: StateMove -> Bool
