@@ -269,7 +269,10 @@ boardOperation StateMove{move=(mo, po), before=be} =
       enpa <- enPassantFieldPos po;
       Just $ MoveFromToOverwritingWithOtherDisappear (po,tosm) enpa
 
+
 --TODO not all of these must be boolean
+
+-- | 'checkIfFigTypeOK', whether figtype @from on board mathes the one of the MoveT constructor
 checkIfFigTypeOK :: StateMove -> Bool
 checkIfFigTypeOK StateMove{move = (m,x), before = GameState {board=f}} =
   maybe False
@@ -282,6 +285,7 @@ checkIfFigTypeOK StateMove{move = (m,x), before = GameState {board=f}} =
        (MkOutwardPawnMove _) -> OutwardPawn
        (MkKnightMove _) -> Knight
     )==).figType) (f x)
+-- | 'checkIfFigColorOK', whether 'movesNext' matches 'figColor' @from on board
 checkIfFigColorOK :: StateMove -> Bool
 checkIfFigColorOK StateMove{move = (_,l), before = GameState {board=f, movesNext=c}} = maybe False ((c==).figColor) (f l)
 whoMove :: StateMove -> Maybe Color
