@@ -389,8 +389,11 @@ _checkIfCapturingSimplyMaybe sm = do
   tosm <- to (move sm);
   oppo <- figColor <$> board (before sm) tosm;
   Just $ oppo /= who
+-- |'checkIfDestEmpty' returns a boolean value that is true iff the destination position exists and the destination square is empty
 checkIfDestEmpty :: StateMove -> Bool
 checkIfDestEmpty sm = (Nothing==) $ board (before sm) <$> to (move sm)
+-- |'wouldBeDestEmpty' returns a boolean value that is true iff the destination position exists and the destination square is empty.
+--  just like the 'checkIfDestEmpty', but for a 'HypoStateMove'
 wouldBeDestEmpty :: HypoStateMove -> Bool
 wouldBeDestEmpty sm = (Nothing==) $ hypoBoard (hypoBefore sm) <$> hTo (hypoMove sm)
 _wouldBeDestOpponentSimplyMaybe :: HypoStateMove -> Maybe Bool
