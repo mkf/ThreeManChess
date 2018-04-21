@@ -460,11 +460,27 @@ _wouldBeAllEmptiesMaybe sm = do
 --  EITHER the destination position is uncalculable OR not all empties are empty (there is an obstacle, a collision)
 wouldBeAllEmpties :: HypoStateMove -> Bool
 wouldBeAllEmpties sm = fromMaybe False $ _wouldBeAllEmptiesMaybe sm
+-- |'checkIfNoCastlingImpossibility' returns a boolean value that is iff at least one of the following (either):
+--
+--  - the from square is empty
+--  - the move is NOT ('MkKingMove' ('NotAlone' x))
+--  - all of the following are true:
+--
+--      - the from square is not empty
+--      - the move IS ('MkKingMove' ('NotAlone' x))
+--      - there is a castling possibility of the 'Castling' x for the color of the fig on the from square
 checkIfNoCastlingImpossibility :: StateMove -> Bool
 checkIfNoCastlingImpossibility sm = fromMaybe True $ _checkCastlingImpossibilityMaybeHelper sm
+-- |'_extractCastling' returns Just x in case of ('MkKingMove' ('NotAlone' x)) and otherwise Nothing
 _extractCastling :: MoveT -> Maybe Castling
 _extractCastling (MkKingMove (NotAlone x)) = Just x
 _extractCastling _ = Nothing
+-- |'_checkCastlingImpossibilityMaybeHelper' returns:
+--
+--  - Nothing, if the from square is empty
+--  - Nothing, if the move is NOT ('MkKingMove' ('NotAlone' x))
+--  - Just True, if the there was a castling possibility of the 'Castling' x for the color of the fig on the from square
+--  - Just False, if there wasnt
 _checkCastlingImpossibilityMaybeHelper :: StateMove -> Maybe Bool
 _checkCastlingImpossibilityMaybeHelper sm = do
   wh <- whoMove sm;
