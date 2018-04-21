@@ -489,10 +489,12 @@ _checkCastlingImpossibilityMaybeHelper sm = do
 isEmptyList :: [a] -> Bool
 isEmptyList [] = True
 isEmptyList _ = False
+-- |'checkIfCapturingThruMoats' IFF AND( 'checkIfDestOpponent' , ('not' . 'isEmptyList') ('moatsM' ('move' sm)) )
 checkIfCapturingThruMoats :: StateMove -> Bool
 checkIfCapturingThruMoats sm = checkIfDestOpponent sm && (not.isEmptyList) (moatsM (move sm))
+-- |'wouldBeThruMoats' IFF ('not' . 'isEmptyList' . 'moatsHM')
 wouldBeThruMoats :: BoundHypoCapMoveT -> Bool
-wouldBeThruMoats sm = not.isEmptyList $ moatsHM sm
+wouldBeThruMoats = not.isEmptyList.moatsHM
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
 checkIfWeArePassingAnUnbridgedMoat sm = not.isEmptyList $ filter (Unbridged==) $ fmap (isBridged $ moatsState $ before sm) $ moatsM $ move sm
 checkIfThereIsNoCreekAgainstUs :: BoundMoveT -> Bool
