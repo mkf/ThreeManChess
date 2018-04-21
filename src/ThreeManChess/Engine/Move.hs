@@ -309,8 +309,8 @@ checkIfIsEnPassant sm = case fst $ move sm of
 --
 --    - returns Nothing if and only if either:
 --
---      - the move is not an 'MkOutwardPawnMove' that is 'Capturing' and not getting a promotion
---      - or ('enPassantFieldPosBM' ('move' sm)) did not return a value
+--        - the move is not an 'MkOutwardPawnMove' that is 'Capturing' and not getting a promotion
+--        - or ('enPassantFieldPosBM' ('move' sm)) did not return a value
 whatColorThereIsPawnToEnPassant :: StateMove -> Maybe (Maybe Color)
 whatColorThereIsPawnToEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> do epsm <- enPassantFieldPosBM (move sm); Just $ figColor <$> board (before sm) epsm
