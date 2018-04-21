@@ -396,12 +396,24 @@ checkIfDestEmpty sm = (Nothing==) $ board (before sm) <$> to (move sm)
 --  just like the 'checkIfDestEmpty', but for a 'HypoStateMove'
 wouldBeDestEmpty :: HypoStateMove -> Bool
 wouldBeDestEmpty sm = (Nothing==) $ hypoBoard (hypoBefore sm) <$> hTo (hypoMove sm)
+-- |just like '_checkIfCapturingSimplyMaybe', '_wouldBeDestOpponentSimplyMaybe' returns a Maybe Bool that is Just_ iff (and otherwise Nothing):
+--
+--  - the from square is not empty, i.e. 'whoHypoMove' returns a 'Color' value for the argument
+--  - destination position exists, that is 'to'.'hypoMove' returns a value for the argument
+--  - the destination square is not empty
+--
+--  and the boolean value is true iff the destination figColor is different than the from figColor
 _wouldBeDestOpponentSimplyMaybe :: HypoStateMove -> Maybe Bool
 _wouldBeDestOpponentSimplyMaybe sm = do
   who <- whoHypoMove sm;
   tosm <- hTo (hypoMove sm);
   oppo <- figColor <$> hypoBoard (hypoBefore sm) tosm;
   Just $ oppo /= who
+-- |just like 'checkIfDestOpponent', 'wouldBeDestOpponent' returns a boolean value that is true iff
+--
+--  - the destination position exists (is calculable)
+--  - there are figures both on the from square and on the destination square (both squares are not empty)
+--  - the destination figColor is different than the from figColor
 wouldBeDestOpponent :: HypoStateMove -> Bool
 wouldBeDestOpponent sm = fromMaybe False $ _wouldBeDestOpponentSimplyMaybe sm
 data EmptyOrOccupiedUnlessEnPassant = Empty | OccupiedUnlessEnPassant deriving (Eq, Show)
@@ -422,6 +434,7 @@ mustDestBeEmpty x = mustDestBeEmptyOrOccupied x == Just Empty
 mustDestBeOccupiedUnlessEnPassant :: MoveT -> Bool
 mustDestBeOccupiedUnlessEnPassant x = mustDestBeEmptyOrOccupied x == Just OccupiedUnlessEnPassant
 
+-- |'checkIfCapturingOwnPiece' iff NEITHER 'checkIfDestEmpty' NOR 'checkIfDestOpponent'
 checkIfCapturingOwnPiece :: StateMove -> Bool
 checkIfCapturingOwnPiece sm = not $ checkIfDestEmpty sm || checkIfDestOpponent sm
 emptiesMT :: BoundMoveT -> Maybe [Pos]
