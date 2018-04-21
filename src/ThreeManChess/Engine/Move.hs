@@ -220,7 +220,7 @@ from = snd
 -- |The 'to' function returns destination position for the BoundMoveT, if adding such a vec is possible
 to :: BoundMoveT -> Maybe Pos
 to (m,f) = addEBC f $ vectorFromMoveT m
--- |The 'hTo' function returns destination position for the BoundHypoCapMoveT, if addinv such a vec is possible
+-- |The 'hTo' function returns destination position for the BoundHypoCapMoveT, if adding such a vec is possible
 hTo :: BoundHypoCapMoveT -> Maybe Pos
 hTo (m,f) = addEBC f $ vectorFromMoveT $ disregardPromotionPossibOfEither $ hypoMoveToNormalMove m
 checkIfPromotionPresenceIsOKforOP :: BoundMove 'OutwardPawn -> Bool
