@@ -369,8 +369,20 @@ checkIfSuchEnPassantPossibleMaybe sm = do
 --        as the 'Color' value from 'whatColorThereIsToEnPassant'
 checkIfEnPassantImpossibility :: StateMove -> Bool
 checkIfEnPassantImpossibility sm = checkIfIsEnPassant sm && not (checkIfSuchEnPassantPossible sm)
+-- |'checkIfDestOpponent' returns a boolean value that is true iff
+--
+--  - the destination position exists (is calculable)
+--  - there are figures both on the from square and on the destination square (both squares are not empty)
+--  - the destination figColor is different than the from figColor
 checkIfDestOpponent :: StateMove -> Bool
 checkIfDestOpponent sm = fromMaybe False $ _checkIfCapturingSimplyMaybe sm
+-- |'_checkIfCapturingSimplyMaybe' returns a Maybe Bool that is Just_ iff (and otherwise Nothing):
+--
+--  - the from square is not empty, i.e. 'whoMove' returns a 'Color' value for the argument
+--  - destination position exists, that is 'to'.'move' returns a value for the argument
+--  - the destination square is not empty
+--
+--  and the boolean value is true iff the destination figColor is different than the from figColor
 _checkIfCapturingSimplyMaybe :: StateMove -> Maybe Bool
 _checkIfCapturingSimplyMaybe sm = do
   who <- whoMove sm;
