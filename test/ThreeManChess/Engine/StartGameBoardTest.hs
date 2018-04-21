@@ -1,5 +1,6 @@
 module ThreeManChess.Engine.StartGameBoardTest where
 
+import Data.Maybe
 import Test.HUnit
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -14,14 +15,23 @@ import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.Move
 import ThreeManChess.Engine.GameState
 
+
+smOne :: StateMove
+smOne = StateMove{move=(MkInwardPawnMove (Walk Forward), (SecondOuter, File White (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf))),
+                  before=newGame}
+
 whiteKingTest :: Assertion
 whiteKingTest = [(MostOuter, File White kfm)] @=? whereIsFig (Figure King White) startBoard
 
 figTypeAndColorOKTest :: Assertion
 figTypeAndColorOKTest =
-  let sm = StateMove{move=(MkInwardPawnMove (Walk Forward), (SecondOuter, File White (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf))),
-                     before=newGame} in
+  let sm = smOne in
     True @=? (checkIfFigTypeOK sm && checkIfFigColorOK sm)
+
+firstAfterTest :: Assertion
+firstAfterTest =
+  let sm = smOne in
+    True @=? isJust (afterWOblahblah sm)
 
 theAFileA :: SegmentEight
 theAFileA = SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf
@@ -50,4 +60,5 @@ tests = [testCase "whiteKingTest" whiteKingTest,
          testCase "figTypeAndColorOKTest" figTypeAndColorOKTest,
          testCase "a2a3Test" a2a3Test,
          testCase "noZeroDiagonalMoves" noZeroDiagonalMoves,
-         testCase "noZeroFilewiseMoves" noZeroFilewiseMoves]
+         testCase "noZeroFilewiseMoves" noZeroFilewiseMoves,
+         testCase "firstAfterTest" firstAfterTest]
