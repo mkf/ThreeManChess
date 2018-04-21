@@ -431,6 +431,16 @@ _isThereAThreatHelperOne this toP fromP pA ePS = do
 isThereAThreat :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassantStore -> Bool
 isThereAThreat this toP fromP pA ePS = fromMaybe False $ _isThereAThreatHelperOne this toP fromP pA ePS
 
+firstMaybe :: [a] -> Maybe a
+firstMaybe (x:_) = Just x
+firstMaybe [] = Nothing
+checkThreatToColorKing :: StateMove -> Color -> Maybe Bool
+checkThreatToColorKing sm col = do
+  tosm <- to $ move sm;
+  wheKing <- firstMaybe $ whereIsFig (Figure King col) (board (before sm))
+  newb <- boardSimplyAfter sm
+  Just $ isThereAThreat newb wheKing tosm (playersAlive (before sm)) (enPassantStore (before sm))
+
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
 moatsHM :: BoundHypoCapMoveT -> [MoatLocalization]
