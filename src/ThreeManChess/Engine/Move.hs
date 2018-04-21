@@ -3,6 +3,7 @@
 module ThreeManChess.Engine.Move where
 
 import ThreeManChess.Engine.Pos
+import ThreeManChess.Engine.PosIterator
 import ThreeManChess.Engine.Figure
 import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.Possibilities
@@ -388,6 +389,18 @@ hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,File _ se))
   | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
   | otherwise = True
 hypoWouldBeNoCreak _ = True
+
+threatChecking :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore -> [Pos]
+threatChecking this whe pa ep =
+  fmap fromJust $ filter isJust $ (\pos -> do
+                                      who <- figColor <$> this whe;
+                                      tjf <- this pos;
+                                      if figColor tjf == who &&
+                                         isAlive pa (figColor tjf) &&
+                                         isThereAThreat this whe pos pa ep
+                                        then Just pos
+                                        else Nothing
+                                  ) <$> allPos
 
 data Impossibility where
   ThereIsACreakAgainstUs :: Impossibility
