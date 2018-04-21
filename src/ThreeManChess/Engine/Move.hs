@@ -223,10 +223,12 @@ to (m,f) = addEBC f $ vectorFromMoveT m
 -- |The 'hTo' function returns destination position for the BoundHypoCapMoveT, if adding such a vec is possible
 hTo :: BoundHypoCapMoveT -> Maybe Pos
 hTo (m,f) = addEBC f $ vectorFromMoveT $ disregardPromotionPossibOfEither $ hypoMoveToNormalMove m
+-- |Makes sure that BoundVec has promotion just in case of OutwardPawn from SecondOuter or no promotion
 checkIfPromotionPresenceIsOKforOP :: BoundMove 'OutwardPawn -> Bool
 checkIfPromotionPresenceIsOKforOP ((_,Just _),(SecondOuter,_)) = True
 checkIfPromotionPresenceIsOKforOP ((_,Nothing),_) = True
 checkIfPromotionPresenceIsOKforOP _ = False
+-- |Makes sure that BoundVec has promotion just in case of OutwardPawn from SecondOuter or no promotion
 checkIfPromotionPresenceIsOK :: BoundMoveT -> Bool
 checkIfPromotionPresenceIsOK (MkOutwardPawnMove x,f) = checkIfPromotionPresenceIsOKforOP (x,f)
 checkIfPromotionPresenceIsOK _ = True
