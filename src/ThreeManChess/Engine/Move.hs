@@ -463,6 +463,10 @@ simpleAfter sm = do
   Just GameState { board=b, moatsState=afterMoatsState sm, movesNext=nextPlayer (playersAlive (before sm)) (movesNext (before sm))
                  , castlingPossibilities = cp, enPassantStore = afterEnPassantStore sm, fullMoveCounter = Just $ incMaybeCount (fullMoveCounter (before sm))
                  , halfMoveClock = afterHalfMoveClock sm, playersAlive = paa }
+afterWOblahblah :: StateMove -> Maybe GameState
+afterWOblahblah sm = do
+  sa <- simpleAfter sm;
+  Just sa
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
