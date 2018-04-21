@@ -467,6 +467,13 @@ afterWOblahblah :: StateMove -> Maybe GameState
 afterWOblahblah sm = do
   sa <- simpleAfter sm;
   Just sa
+afterWOevaluatingDeath :: StateMove -> Maybe GameState
+afterWOevaluatingDeath sm = do
+  sa <- simpleAfter sm;
+  ctm <- checkForCheckInitiatedThruMoat sm;
+  if isNothing (checkImpossibility sm) && ctm
+    then Just sa
+    else Nothing
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
