@@ -401,6 +401,10 @@ threatChecking this whe pa ep =
                                         then Just pos
                                         else Nothing
                                   ) <$> allPos
+checkChecking :: GameBoard -> Color -> PlayersAlive -> Maybe [Pos]
+checkChecking this who pa = do
+  kingPos <- firstMaybe $ whereIsFig (Figure King who) this;
+  Just $ threatChecking this kingPos pa (Nothing,Nothing)
 
 data Impossibility where
   ThereIsACreakAgainstUs :: Impossibility
