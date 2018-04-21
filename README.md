@@ -7,3 +7,4 @@ previous wrong implementations
  - ArchieT/3manchess
  - ArchieT/jchess3man
  - ArchieT/clj3manchess
+ - ArchieT/chess3man.dart
