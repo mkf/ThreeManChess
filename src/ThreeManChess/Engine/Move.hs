@@ -305,31 +305,53 @@ checkIfIsEnPassant :: StateMove -> Bool
 checkIfIsEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> (do tosm <- to (move sm); Just $ isNothing $ board (before sm) tosm) == Just True
   _ -> False
--- | the 'whatColorThereIsPawnToEnPassant' function:
+-- | the 'whatColorThereIsToEnPassant' function:
 --
 --    - returns Nothing if and only if either:
 --
 --        - the move is not an 'MkOutwardPawnMove' that is 'Capturing' and not getting a promotion
 --        - or ('enPassantFieldPosBM' ('move' sm)) did not return a value
--- 
+--
 --    - returns Just Nothing if and only if the en-passant target field is empty
 --    - Just Color is the color of the Figure (whichever type it is) on the en-passant target field
-whatColorThereIsPawnToEnPassant :: StateMove -> Maybe (Maybe Color)
-whatColorThereIsPawnToEnPassant sm = case fst $ move sm of
+whatColorThereIsToEnPassant :: StateMove -> Maybe (Maybe Color)
+whatColorThereIsToEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> do epsm <- enPassantFieldPosBM (move sm); Just $ figColor <$> board (before sm) epsm
   _ -> Nothing
+-- |'checkIfSuchEnPassantPossible' returns a boolean value that is true if and only if all of the following are true:
+--
+--  - 'whatColorThereIsToEnPassant' returns a value of a value (Just Just 'Color') for the argument
+--  - 'whoMove' returns a 'Color' value for the argument
+--  - 'to'.'move' returns a value for the argument
+--  - 'matchEnP' a value for the 'before's 'enPassantStore' and the 'to'.'move' result value
+--  - the 'Color' value from 'whoMove' processed with the matcher ('matchToColFun' of the 'matchEnP' result) is the same
+--    as the 'Color' value from 'whatColorThereIsToEnPassant'
 checkIfSuchEnPassantPossible :: StateMove -> Bool
 checkIfSuchEnPassantPossible sm = fromMaybe False $ checkIfSuchEnPassantPossibleMaybe sm
 matchToColFun :: EnPassantMatch -> Color -> Color
 matchToColFun LastMatch = prev
 matchToColFun PrevMatch = next
+-- |Being a helper to 'checkIfSuchEnPassantPossible', 'checkIfSuchEnPassantPossibleMaybe'
+--  returns Just iff:
+--
+--  - 'whatColorThereIsToEnPassant' returns a value (even if its Just Nothing) for the argument
+--  - 'whoMove' returns a 'Color' value for the argument
+--  - 'to'.'move' returns a value for the argument
+--  - 'matchEnP' a value for the 'before's 'enPassantStore' and the 'to'.'move' result value
+--
+--  returns a boolean value, one that is true if and only if all of the following are true:
+--
+--  - the 'Maybe' 'Color' value from 'whatColorThereIsToEnPassant' is 'Just' 'True'
+--  - the 'Color' value from 'whoMove' processed with the matcher ('matchToColFun' of the 'matchEnP' result) is the same
+--    as the 'Color' value from 'whatColorThereIsToEnPassant'
 checkIfSuchEnPassantPossibleMaybe :: StateMove -> Maybe Bool
 checkIfSuchEnPassantPossibleMaybe sm = do
-  whaCol <- whatColorThereIsPawnToEnPassant sm;
+  whaCol <- whatColorThereIsToEnPassant sm;
   who <- whoMove sm;
   tosm <- to (move sm);
   ma <- matchEnP (enPassantStore (before sm)) tosm
   Just $ whaCol == Just (matchToColFun ma who)
+-- |'checkIfEnPassantImpossibility' is True iff 'checkIfIsEnPassant' and not 'checkIfSuchEnPassantPossible'
 checkIfEnPassantImpossibility :: StateMove -> Bool
 checkIfEnPassantImpossibility sm = checkIfIsEnPassant sm && not (checkIfSuchEnPassantPossible sm)
 checkIfDestOpponent :: StateMove -> Bool
