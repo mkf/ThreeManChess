@@ -232,6 +232,8 @@ checkIfPromotionPresenceIsOK _ = True
 
 data StateMove = StateMove {move :: BoundMoveT, before :: GameState}
 
+boardSimplyAfter :: StateMove -> Maybe GameBoard
+boardSimplyAfter sm = (\x -> x (board (before sm))) . performSingleChange <$> boardOperation sm
 boardOperation :: StateMove -> Maybe GameBoardSingleChange
 boardOperation StateMove{move=(mo, po), before=be} =
   case mo of
