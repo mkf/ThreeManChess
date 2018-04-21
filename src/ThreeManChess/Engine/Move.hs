@@ -337,7 +337,7 @@ matchToColFun PrevMatch = next
 --  - 'whatColorThereIsToEnPassant' returns a value (even if its Just Nothing) for the argument
 --  - 'whoMove' returns a 'Color' value for the argument
 --  - 'to'.'move' returns a value for the argument
---  - 'matchEnP' a value for the 'before's 'enPassantStore' and the 'to'.'move' result value
+--  - 'matchEnP' returns a value for the 'before's 'enPassantStore' and the 'to'.'move' result value
 --
 --  returns a boolean value, one that is true if and only if all of the following are true:
 --
@@ -360,11 +360,13 @@ checkIfSuchEnPassantPossibleMaybe sm = do
 --  - has ('to' ('move' sm)) return a Just value (the value is then referred to as tosm)
 --    (i.e.: 'to'.'move' returns a value for the argument)
 --  - the destination square ('board' ('before' sm) tosm) is empty ('isNothing')
---  - 'whatColorThereIsToEnPassant' returns a value of a value (Just Just 'Color') for the argument
---  - 'whoMove' returns a 'Color' value for the argument
---  - 'matchEnP' a value for the 'before's 'enPassantStore' and the 'to'.'move' result value
---  - the 'Color' value from 'whoMove' processed with the matcher ('matchToColFun' of the 'matchEnP' result) is the same
---    as the 'Color' value from 'whatColorThereIsToEnPassant'
+--  - either:
+--
+--      - 'whatColorThereIsToEnPassant' does NOT return a value of a value (Just Just 'Color') for the argument
+--      - 'whoMove' returns Nothing for the argument (i.e. the from is empty)
+--      - 'matchEnP' does NOT return a value for the 'before's 'enPassantStore' and the 'to'.'move' result value
+--      - the 'Color' value from 'whoMove' processed with the matcher ('matchToColFun' of the 'matchEnP' result) is NOT the same
+--        as the 'Color' value from 'whatColorThereIsToEnPassant'
 checkIfEnPassantImpossibility :: StateMove -> Bool
 checkIfEnPassantImpossibility sm = checkIfIsEnPassant sm && not (checkIfSuchEnPassantPossible sm)
 checkIfDestOpponent :: StateMove -> Bool
