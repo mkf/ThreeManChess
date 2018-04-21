@@ -437,20 +437,27 @@ mustDestBeOccupiedUnlessEnPassant x = mustDestBeEmptyOrOccupied x == Just Occupi
 -- |'checkIfCapturingOwnPiece' iff NEITHER 'checkIfDestEmpty' NOR 'checkIfDestOpponent'
 checkIfCapturingOwnPiece :: StateMove -> Bool
 checkIfCapturingOwnPiece sm = not $ checkIfDestEmpty sm || checkIfDestOpponent sm
+-- |'emptiesMT' are Nothing iff destination position is uncalculable
 emptiesMT :: BoundMoveT -> Maybe [Pos]
 emptiesMT (m,f) = emptiesFromEBC f (vectorFromMoveT m)
+-- |'emptiesHMT' are Nothing iff destination position is uncalculable
 emptiesHMT :: BoundHypoCapMoveT -> Maybe [Pos]
 emptiesHMT (m,f) = emptiesFromEBC f (vectorFromHypoCapMoveT m)
+-- |'checkIfAllAreEmptiesMaybe' is Nothing iff destination position is uncalculable
 checkIfAllAreEmptiesMaybe :: StateMove -> Maybe Bool
 checkIfAllAreEmptiesMaybe sm = do
   empties <- emptiesMT $ move sm;
   Just $ checkEmpties (board (before sm)) empties
+-- |'checkIfAllAreEmpties' is False iff EITHER the destination position is uncalculable OR not all empties are empty (there is an obstacle, a collision)
 checkIfAllAreEmpties :: StateMove -> Bool
 checkIfAllAreEmpties sm = fromMaybe False (checkIfAllAreEmptiesMaybe sm)
+-- |'_wouldBeAllEmptiesMaybe', just like 'checkIfAllAreEmptiesMaybe', is Nothing iff destination position is uncalculable
 _wouldBeAllEmptiesMaybe :: HypoStateMove -> Maybe Bool
 _wouldBeAllEmptiesMaybe sm = do
   empties <- emptiesHMT $ hypoMove sm;
   Just $ checkEmpties (hypoBoard (hypoBefore sm)) empties
+-- |'wouldBeAllEmpties', just like 'checkIfAllAreEmpties', is False iff
+--  EITHER the destination position is uncalculable OR not all empties are empty (there is an obstacle, a collision)
 wouldBeAllEmpties :: HypoStateMove -> Bool
 wouldBeAllEmpties sm = fromMaybe False $ _wouldBeAllEmptiesMaybe sm
 checkIfNoCastlingImpossibility :: StateMove -> Bool
