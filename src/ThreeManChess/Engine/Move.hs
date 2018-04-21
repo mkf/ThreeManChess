@@ -296,18 +296,21 @@ whoMove StateMove{move = (_,l), before = GameState {board=f}} = fmap figColor (f
 whoHypoMove :: HypoStateMove -> Maybe Color
 whoHypoMove HypoStateMove{hypoMove = (_,l), hypoBefore = (f,_,_)} = fmap figColor (f l)
 -- | 'checkIfIsEnPassant' returns a boolean value of: if and only if all of the following are true:
---    * ('fst' ('move' sm)) is of ('MkOutwardPawnMove' ('Capturing' _, 'Nothing'))
+--
+--    - ('fst' ('move' sm)) is of ('MkOutwardPawnMove' ('Capturing' _, 'Nothing'))
 --       that is, is a move of an 'OutwardPawn' that is 'Capturing' and not getting a 'Promotion'
---    * has ('to' ('move' sm)) return a Just value (the value is then referred to as tosm)
---    * the destination square ('board' ('before' sm) tosm) is empty ('isNothing')
+--    - has ('to' ('move' sm)) return a Just value (the value is then referred to as tosm)
+--    - the destination square ('board' ('before' sm) tosm) is empty ('isNothing')
 checkIfIsEnPassant :: StateMove -> Bool
 checkIfIsEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> (do tosm <- to (move sm); Just $ isNothing $ board (before sm) tosm) == Just True
   _ -> False
 -- | the 'whatColorThereIsPawnToEnPassant' function:
---    * returns Nothing if and only if either:
---      * the move is not an 'MkOutwardPawnMove' that is 'Capturing' and not getting a promotion
---      * or ('enPassantFieldPosBM' ('move' sm)) did not return a value
+--
+--    - returns Nothing if and only if either:
+--
+--      - the move is not an 'MkOutwardPawnMove' that is 'Capturing' and not getting a promotion
+--      - or ('enPassantFieldPosBM' ('move' sm)) did not return a value
 whatColorThereIsPawnToEnPassant :: StateMove -> Maybe (Maybe Color)
 whatColorThereIsPawnToEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> do epsm <- enPassantFieldPosBM (move sm); Just $ figColor <$> board (before sm) epsm
