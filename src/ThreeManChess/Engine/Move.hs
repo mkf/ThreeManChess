@@ -440,6 +440,12 @@ checkThreatToColorKing sm col = do
   wheKing <- firstMaybe $ whereIsFig (Figure King col) (board (before sm))
   newb <- boardSimplyAfter sm
   Just $ isThereAThreat newb wheKing tosm (playersAlive (before sm)) (enPassantStore (before sm))
+checkForCheckInitiatedThruMoat :: StateMove -> Maybe Bool
+checkForCheckInitiatedThruMoat sm = ((not.isEmptyList $ moatsM $ move sm)&&) <$> do
+  wCo <- whoMove sm;
+  a <- checkThreatToColorKing sm (prev wCo);
+  b <- checkThreatToColorKing sm (next wCo);
+  Just $ a && b
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
