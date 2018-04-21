@@ -2,6 +2,7 @@
 
 module ThreeManChess.Engine.GameState where
 
+import ThreeManChess.Engine.Board
 import ThreeManChess.Engine.GameBoard
 import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.CastlingPossibilities
@@ -11,8 +12,15 @@ import ThreeManChess.Engine.PlayersAlive
 import ThreeManChess.Engine.Directions
 import ThreeManChess.Engine.Pos
 
+showBoard :: (Show a) => Board a -> String
+showBoard a = show $ BoardWrap a
+
 data GameState = GameState {board :: GameBoard, moatsState :: MoatsState, movesNext :: Color, castlingPossibilities :: CastlingPossibilities,
                             enPassantStore :: EnPassantStore, halfMoveClock :: Maybe Count, fullMoveCounter :: Maybe Count, playersAlive :: PlayersAlive }
+instance Show GameState where
+  show GameState{board=b, moatsState=ms, movesNext=mn, castlingPossibilities=cp, enPassantStore=eps, halfMoveClock=hmc, fullMoveCounter=fmc, playersAlive=pa} =
+    showBoard b ++ show ms ++ show mn ++ show cp ++ show eps ++ show hmc ++ show fmc ++ show pa
+
 newGame :: GameState
 newGame = GameState { board = startBoard, moatsState = noBridges, movesNext = White, castlingPossibilities = allCastling,
                       enPassantStore = (Nothing, Nothing), halfMoveClock = Nothing, fullMoveCounter = Nothing, playersAlive = allAlive }

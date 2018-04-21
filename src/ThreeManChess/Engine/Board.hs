@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 module ThreeManChess.Engine.Board where
 
 -- import Control.Monad
@@ -6,6 +8,22 @@ import ThreeManChess.Engine.PosIterator
 import ThreeManChess.Engine.Color
 
 type Board a = Pos -> Maybe a
+newtype BoardWrap a = BoardWrap (Board a)
+
+ourShowList :: (Show a) => [Maybe a] -> String
+ourShowList xs = "[" ++ ourShowListHelper xs
+ourShowListHelper :: (Show a) => [Maybe a] -> String
+ourShowListHelper (Nothing:xs) = "___" ++ " " ++ ourShowListHelper xs
+ourShowListHelper (Just x:xs) = show x ++ " " ++ ourShowListHelper xs
+ourShowListHelper [] = "]"
+ourShowListOfLists :: (Show a) => [[Maybe a]] -> String
+ourShowListOfLists xs = "\n[" ++ ourShowListOfListsHelper xs
+ourShowListOfListsHelper :: (Show a) => [[Maybe a]] -> String
+ourShowListOfListsHelper (x:xs) = ourShowList x ++ "\n " ++ ourShowListOfListsHelper xs
+ourShowListOfListsHelper [] = "] "
+
+instance (Show a) => Show (BoardWrap a) where
+  show (BoardWrap f) = ourShowListOfLists $ fmap (fmap f) allPos2D
 
 put :: Board a -> Pos -> Maybe a -> Board a
 put _ x what y | x==y = what

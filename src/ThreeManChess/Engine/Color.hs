@@ -3,7 +3,11 @@ module ThreeManChess.Engine.Color where
 
 import Data.Data
 
-data Color = White | Gray | Black deriving (Eq, Ord, Read, Show, Data, Typeable)
+data Color = White | Gray | Black deriving (Eq, Ord, Read, Data, Typeable)
+instance Show Color where
+  show White = "Wh"
+  show Gray = "Gr"
+  show Black = "Bl"
 -- colorSet :: Set.Set Color
 -- colorSet = Set.fromList White Gray Black
 next :: Color -> Color

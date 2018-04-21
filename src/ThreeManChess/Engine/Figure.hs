@@ -17,7 +17,9 @@ import ThreeManChess.Engine.FigType
 --   )
 
 -- data Figure = Figure {figType :: FigType, color :: Color} deriving (Eq, Show, Read, Data, Typeable)
-data Figure = Figure FigType Color deriving (Eq, Show, Read, Data, Typeable)
+data Figure = Figure FigType Color deriving (Eq, Read, Data, Typeable)
+instance Show Figure where
+  show (Figure a b) = show a ++ show b
 figType :: Figure -> FigType
 figType (Figure x _) = x
 figColor :: Figure -> Color

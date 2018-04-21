@@ -4,7 +4,15 @@ module ThreeManChess.Engine.FigType where
 import Data.Data
 -- import Data.Set as Set
 
-data FigType = InwardPawn | OutwardPawn | Rook | Knight | Bishop | King | Queen deriving (Eq, Show, Read, Data, Typeable)
+data FigType = InwardPawn | OutwardPawn | Rook | Knight | Bishop | King | Queen deriving (Eq, Read, Data, Typeable)
+instance Show FigType where
+  show InwardPawn = "↑"
+  show OutwardPawn = "↓"
+  show Rook = "R"
+  show Knight = "N"
+  show Bishop = "B"
+  show King = "K"
+  show Queen = "Q"
 
 class FigTypeClass f
 instance FigTypeClass FigType
