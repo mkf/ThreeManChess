@@ -474,7 +474,7 @@ moatsHM :: BoundHypoCapMoveT -> [MoatLocalization]
 moatsHM (m, f) = moats f (vectorFromHypoCapMoveT m)
 
 afterMoatsState :: StateMove -> MoatsState
-afterMoatsState _ = error "Not implemented TODO"
+afterMoatsState sm = moatsState $ before sm -- error "Not implemented TODO"
 enPassantFieldPosBM :: BoundMoveT -> Maybe Pos
 enPassantFieldPosBM (MkInwardPawnMove Jump, f) = Just $ fromJust $ enPassantFieldPos f
 enPassantFieldPosBM _ = Nothing
