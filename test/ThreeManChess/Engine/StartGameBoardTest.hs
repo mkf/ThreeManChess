@@ -24,14 +24,10 @@ whiteKingTest :: Assertion
 whiteKingTest = [(MostOuter, File White kfm)] @=? whereIsFig (Figure King White) startBoard
 
 figTypeAndColorOKTest :: Assertion
-figTypeAndColorOKTest =
-  let sm = smOne in
-    True @=? (checkIfFigTypeOK sm && checkIfFigColorOK sm)
+figTypeAndColorOKTest = True @=? (checkIfFigTypeOK smOne && checkIfFigColorOK smOne)
 
 firstAfterTest :: Assertion
-firstAfterTest =
-  let sm = smOne in
-    True @=? isJust (afterWOblahblah sm)
+firstAfterTest = True @=? isJust (afterWOblahblah smOne)
 
 theAFileA :: SegmentEight
 theAFileA = SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf
