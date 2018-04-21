@@ -352,6 +352,19 @@ checkIfSuchEnPassantPossibleMaybe sm = do
   ma <- matchEnP (enPassantStore (before sm)) tosm
   Just $ whaCol == Just (matchToColFun ma who)
 -- |'checkIfEnPassantImpossibility' is True iff 'checkIfIsEnPassant' and not 'checkIfSuchEnPassantPossible'
+--
+-- that is
+--
+--  - ('fst' ('move' sm)) is of ('MkOutwardPawnMove' ('Capturing' _, 'Nothing'))
+--    that is, is a move of an 'OutwardPawn' that is 'Capturing' and not getting a 'Promotion'
+--  - has ('to' ('move' sm)) return a Just value (the value is then referred to as tosm)
+--    (i.e.: 'to'.'move' returns a value for the argument)
+--  - the destination square ('board' ('before' sm) tosm) is empty ('isNothing')
+--  - 'whatColorThereIsToEnPassant' returns a value of a value (Just Just 'Color') for the argument
+--  - 'whoMove' returns a 'Color' value for the argument
+--  - 'matchEnP' a value for the 'before's 'enPassantStore' and the 'to'.'move' result value
+--  - the 'Color' value from 'whoMove' processed with the matcher ('matchToColFun' of the 'matchEnP' result) is the same
+--    as the 'Color' value from 'whatColorThereIsToEnPassant'
 checkIfEnPassantImpossibility :: StateMove -> Bool
 checkIfEnPassantImpossibility sm = checkIfIsEnPassant sm && not (checkIfSuchEnPassantPossible sm)
 checkIfDestOpponent :: StateMove -> Bool
