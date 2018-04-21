@@ -237,8 +237,10 @@ checkIfPromotionPresenceIsOK _ = True
 
 data StateMove = StateMove {move :: BoundMoveT, before :: GameState}
 
+-- |'boardSimplyAfter' performs a move if only 'boardOperation' generates a 'GameBoardSingleChange' for it
 boardSimplyAfter :: StateMove -> Maybe GameBoard
 boardSimplyAfter sm = (\x -> x (board (before sm))) . performSingleChange <$> boardOperation sm
+-- |If 'boardOperation' gives 'Nothing', something must be wrong with the vector/pos addition or the board
 boardOperation :: StateMove -> Maybe GameBoardSingleChange
 boardOperation StateMove{move=(mo, po), before=be} =
   case mo of
