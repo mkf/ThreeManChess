@@ -1,4 +1,4 @@
-#ThreeManChess
+# ThreeManChess
 
 this is an implementation of 3manchess.com
 
