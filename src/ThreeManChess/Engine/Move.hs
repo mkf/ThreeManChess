@@ -288,10 +288,18 @@ checkIfFigTypeOK StateMove{move = (m,x), before = GameState {board=f}} =
 -- | 'checkIfFigColorOK', whether 'movesNext' matches 'figColor' @from on board
 checkIfFigColorOK :: StateMove -> Bool
 checkIfFigColorOK StateMove{move = (_,l), before = GameState {board=f, movesNext=c}} = maybe False ((c==).figColor) (f l)
+-- | 'whoMove' returns Just Color (figColor) of ( (board (before x)) (from (move x)) ) or Nothing if the square is empty
 whoMove :: StateMove -> Maybe Color
 whoMove StateMove{move = (_,l), before = GameState {board=f}} = fmap figColor (f l)
+-- | 'whoHypoMove' returns Just Color (figColor) of ( (hypoBoard (hypoBefore x)) (hypoFrom (hypoMove x)) ) or Nothing if the square is empty.
+-- | 'whoHypoMove' is just like 'whoMove' but for 'HypoStateMove' instead of 'StateMove'
 whoHypoMove :: HypoStateMove -> Maybe Color
 whoHypoMove HypoStateMove{hypoMove = (_,l), hypoBefore = (f,_,_)} = fmap figColor (f l)
+-- | 'checkIfIsEnPassant' returns a boolean value of: if and only if all of the following are true:
+-- |  - ('fst' ('move' sm)) is of ('MkOutwardPawnMove' ('Capturing' _, 'Nothing'))
+-- |     that is, is a move of an 'OutwardPawn' that is 'Capturing' and not getting a 'Promotion'
+-- |  - has ('to' ('move' sm)) return a Just value (the value is then referred to as tosm)
+-- |  - the destination square ('board' ('before' sm) tosm) is empty ('isNothing')
 checkIfIsEnPassant :: StateMove -> Bool
 checkIfIsEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> (do tosm <- to (move sm); Just $ isNothing $ board (before sm) tosm) == Just True
