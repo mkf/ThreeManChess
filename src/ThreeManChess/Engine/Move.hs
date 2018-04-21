@@ -232,6 +232,34 @@ checkIfPromotionPresenceIsOK _ = True
 
 data StateMove = StateMove {move :: BoundMoveT, before :: GameState}
 
+boardOperation :: StateMove -> Maybe GameBoardSingleChange
+boardOperation StateMove{move=(mo, po), before=be} =
+  case mo of
+    (MkQueenMove _) -> do tosm <- to (mo,po); Just $ MoveFromToOverwriting po tosm
+    (MkKnightMove _) -> do tosm <- to (mo,po); Just $ MoveFromToOverwriting po tosm
+    (MkRookMove _) -> do tosm <- to (mo,po); Just $ MoveFromToOverwriting po tosm
+    (MkBishopMove _) -> do tosm <- to (mo,po); Just $ MoveFromToOverwriting po tosm
+    (MkKingMove (Alone _)) -> do tosm <- to (mo, po); Just $ MoveFromToOverwriting po tosm
+    (MkKingMove (NotAlone x)) -> do
+      tosm <- to (mo,po);
+      whh <- whoMove (StateMove (mo,po) be);
+      Just $ DoubleMoveFromToOverwriting (po,tosm) (rookFrom x whh, rookTo x whh)
+    (MkInwardPawnMove (Walk Forward)) -> do tosm <- to (mo, po); Just $ MoveFromToOverwriting po tosm
+    (MkInwardPawnMove Jump) -> do tosm <- to (mo, po); Just $ MoveFromToOverwriting po tosm
+    (MkOutwardPawnMove (Forward,Nothing)) -> do tosm <- to (mo, po); Just $ MoveFromToOverwriting po tosm
+    (MkOutwardPawnMove (_,Just a)) -> do
+      tosm <- to (mo,po);
+      whh <- whoMove (StateMove (mo,po) be);
+      Just $ MoveWithReplacement (po,tosm) (Figure (desiredType a) whh)
+    (MkInwardPawnMove (Walk (Capturing _))) -> do
+      tosm <- to (mo,po);
+      enpa <- enPassantFieldPos po;
+      Just $ MoveFromToOverwritingWithOtherDisappear (po,tosm) enpa
+    (MkOutwardPawnMove (Capturing _,Nothing)) -> do
+      tosm <- to (mo,po);
+      enpa <- enPassantFieldPos po;
+      Just $ MoveFromToOverwritingWithOtherDisappear (po,tosm) enpa
+
 --TODO not all of these must be boolean
 checkIfFigTypeOK :: StateMove -> Bool
 checkIfFigTypeOK StateMove{move = (m,x), before = GameState {board=f}} =

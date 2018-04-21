@@ -96,12 +96,12 @@ _ofBoardT :: BoardT a -> Board a
 _ofBoardT x (r, f) = _ofRankT (_ofBoardTRankT x r) f
 
 data BoardSingleChange a = MoveFromToOverwriting Pos Pos | DoubleMoveFromToOverwriting (Pos,Pos) (Pos,Pos) |
-                           MoveFromToOverwritingWithOtherDisappear (Pos,Pos) Pos | Replacement Pos a
+                           MoveFromToOverwritingWithOtherDisappear (Pos,Pos) Pos | MoveWithReplacement (Pos,Pos) a
 performSingleChange :: BoardSingleChange a -> Board a -> Board a
 performSingleChange (MoveFromToOverwriting a b) f = put (swap f a b) a Nothing
 performSingleChange (DoubleMoveFromToOverwriting a b) f = performSingleChanges [uncurry MoveFromToOverwriting a, uncurry MoveFromToOverwriting b] f
 performSingleChange (MoveFromToOverwritingWithOtherDisappear a b) f = put (performSingleChange (uncurry MoveFromToOverwriting a) f) b Nothing
-performSingleChange (Replacement w a) f = put f w (Just a)
+performSingleChange (MoveWithReplacement (wf,wt) a) f = put (put f wt $ Just a) wf Nothing  --put f w (Just a)
 performSingleChanges :: [BoardSingleChange a] -> Board a -> Board a
 performSingleChanges xs b = foldl (flip performSingleChange) b xs
 

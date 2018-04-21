@@ -230,6 +230,15 @@ passTimes :: (a -> a) -> Count -> a -> a
 passTimes f Once a = f a
 passTimes f (OnceMore c) a = passTimes f c (f a)
 data Castling = QueensideCastling | KingsideCastling deriving Show -- deriving (Vec)
+rookGoesInCastling :: Castling -> SegmentEight
+rookGoesInCastling ca = fromJust $ (case ca of
+                                      KingsideCastling -> plusEight
+                                      QueensideCastling -> minusEight) kfm
+rookTo :: Castling -> Color -> Pos
+rookTo ca co = (MostOuter, File co $ rookGoesInCastling ca)
+rookFrom :: Castling -> Color -> Pos
+rookFrom QueensideCastling co = (MostOuter, File co zeroSegmentEight)
+rookFrom KingsideCastling co = (MostOuter, File co sevenSegmentEight)
 emptiesForCastling :: Castling -> [SegmentEight]
 emptiesForCastling KingsideCastling = [fromJust $ plusEight kfm, passTimes (fromJust.plusEight) (OnceMore Once) kfm]
 emptiesForCastling QueensideCastling = [fromJust $ minusEight kfm, passTimes (fromJust.minusEight) (OnceMore Once) kfm,

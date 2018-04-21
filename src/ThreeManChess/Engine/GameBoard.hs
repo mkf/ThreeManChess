@@ -7,6 +7,7 @@ import ThreeManChess.Engine.Figure
 import ThreeManChess.Engine.FigType
 
 type GameBoard = Board Figure
+type GameBoardSingleChange = BoardSingleChange Figure
 empty :: GameBoard
 empty _ = Nothing
 segmEightStarting :: SegmentEight -> FigType
