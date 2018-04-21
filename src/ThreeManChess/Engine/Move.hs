@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, DataKinds, ExistentialQuantification, GADTs, DuplicateRecordFields #-}
+{-# LANGUAGE DatatypeContexts, TypeFamilies, DataKinds, ExistentialQuantification, GADTs, DuplicateRecordFields #-}
 
 module ThreeManChess.Engine.Move where
 
