@@ -446,6 +446,23 @@ checkForCheckInitiatedThruMoat sm = ((not.isEmptyList $ moatsM $ move sm)&&) <$>
   a <- checkThreatToColorKing sm (prev wCo);
   b <- checkThreatToColorKing sm (next wCo);
   Just $ a && b
+nextPlayer :: PlayersAlive -> Color -> Color
+nextPlayer pa c = if isAlive pa (next c) then next c else prev c
+afterHalfMoveClock :: StateMove -> Maybe Count
+afterHalfMoveClock _ = Just Once
+afterPlayersAlive :: StateMove -> Maybe PlayersAlive
+afterPlayersAlive sm = Just $ playersAlive $ before sm
+incMaybeCount :: Maybe Count -> Count
+incMaybeCount Nothing = Once
+incMaybeCount (Just a) = OnceMore a
+simpleAfter :: StateMove -> Maybe GameState
+simpleAfter sm = do
+  b <- boardSimplyAfter sm;
+  cp <- afterCastling (castlingPossibilities (before sm)) (move sm) (movesNext (before sm));
+  paa <- afterPlayersAlive sm;
+  Just GameState { board=b, moatsState=afterMoatsState sm, movesNext=nextPlayer (playersAlive (before sm)) (movesNext (before sm))
+                 , castlingPossibilities = cp, enPassantStore = afterEnPassantStore sm, fullMoveCounter = Just $ incMaybeCount (fullMoveCounter (before sm))
+                 , halfMoveClock = afterHalfMoveClock sm, playersAlive = paa }
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
