@@ -611,6 +611,19 @@ isThereAThreat this toP fromP pA ePS = fromMaybe False $ _isThereAThreatHelperOn
 firstMaybe :: [a] -> Maybe a
 firstMaybe (x:_) = Just x
 firstMaybe [] = Nothing
+-- 'checkThreatToColorKing' returns a boolean value obtained from 'isThereAThreat' with arguments:
+--
+-- - 'boardSimplyAfter'
+-- - first ('Figure' 'King' 'Color') found position
+-- - destination pos of the move
+-- - 'playersAlive'
+-- - 'enPassantStore'
+--
+-- 'checkThreatToColorKing' returns 'Nothing' if either:
+--
+-- - the destination pos uncalculable
+-- - no ('Figure' 'King' 'Color') found
+-- - 'boardSimplyAfter' returned 'Nothing'
 checkThreatToColorKing :: StateMove -> Color -> Maybe Bool
 checkThreatToColorKing sm col = do
   tosm <- to $ move sm;
