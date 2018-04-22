@@ -232,6 +232,10 @@ checkIfPromotionPresenceIsOKforOP _ = False
 checkIfPromotionPresenceIsOK :: BoundMoveT -> Bool
 checkIfPromotionPresenceIsOK (MkOutwardPawnMove x,f) = checkIfPromotionPresenceIsOKforOP (x,f)
 checkIfPromotionPresenceIsOK _ = True
+-- |'isThisAPawnPromotionMove' returns true iff the move is a (MkOutwardPawnMove (_, Just _))
+isThisAPawnPromotionMove :: MoveT -> Bool
+isThisAPawnPromotionMove (MkOutwardPawnMove (_, Just _)) = True
+isThisAPawnPromotionMove _ = False
 
 -- boardSimplyAfter :: GameBoard -> BoundMoveT
 
