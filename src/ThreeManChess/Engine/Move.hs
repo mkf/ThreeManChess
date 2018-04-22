@@ -518,6 +518,7 @@ hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,File _ se))
 hypoWouldBeNoCreak _ = True
 
 -- |'_oneThreatCheck' returns 'Nothing' if at least one of the following is 'True':
+--
 --  - the square of the 'GameBoard' that is the first argument on 'Pos' that is the second argument is empty
 --  - the square of the 'GameBoard' that is the first argument on 'Pos' that is the fifth argument is empty
 --  - the figures that are on those two aforementioned fields are of different 'figColor'
