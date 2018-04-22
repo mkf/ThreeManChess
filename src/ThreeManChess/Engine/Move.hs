@@ -538,7 +538,7 @@ threatChecking :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore -> [Pos]
 threatChecking this whe pa ep = flip filter allPos $ _oneThreatCheck this whe pa ep
 -- |'checkChecking' returns 'Nothing' if 'whereIsFig' ('Figure' 'King' 'Color') 'GameBoard' returns an empty list
 --
--- otherwise it returns 'Just' '$' 'threatChecking' 'GameBoard' (first of the nonempty list 'whereIsFig' returned)
+-- otherwise it returns 'Just' '$' 'threatChecking' 'GameBoard' (first of the nonempty list 'whereIsFig' returned) 'PlayersAlive' '(Nothing,Nothing)'
 checkChecking :: GameBoard -> Color -> PlayersAlive -> Maybe [Pos]
 checkChecking this who pa = do
   kingPos <- firstMaybe $ whereIsFig (Figure King who) this;
