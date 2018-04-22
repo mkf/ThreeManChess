@@ -517,7 +517,6 @@ hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,File _ se))
   | otherwise = True
 hypoWouldBeNoCreak _ = True
 
--- TODO:should be boolean
 -- |'_oneThreatCheck' returns 'Nothing' if at least one of the following is 'True':
 --  - the square of the 'GameBoard' that is the first argument on 'Pos' that is the second argument is empty
 --  - the square of the 'GameBoard' that is the first argument on 'Pos' that is the fifth argument is empty
@@ -526,18 +525,20 @@ hypoWouldBeNoCreak _ = True
 --  - 'isThereAThreat' returns 'False' given arguments like that: 1st 2nd 5th 3rd 4th
 --
 --  Otherwise, '_oneThreatCheck' returns 'Just' the fifth argument
-_oneThreatCheck :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore -> Pos -> Maybe Pos
-_oneThreatCheck this whe pa ep pos = do
+_oneThreatCheck :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore -> Pos -> Bool
+_oneThreatCheck this whe pa ep pos = fromMaybe False $ do
   who <- figColor <$> this whe;
   tjf <- this pos;
-  if figColor tjf == who &&
-     isAlive pa (figColor tjf) &&
-     isThereAThreat this whe pos pa ep
-    then Just pos
-    else Nothing
+  Just $
+    figColor tjf == who &&
+    isAlive pa (figColor tjf) &&
+    isThereAThreat this whe pos pa ep
+-- |'threatChecking' filters 'allPos' with ('_oneThreatCheck' with all four arguments)
 threatChecking :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore -> [Pos]
-threatChecking this whe pa ep =
-  fmap fromJust $ filter isJust $ _oneThreatCheck this whe pa ep <$> allPos
+threatChecking this whe pa ep = flip filter allPos $ _oneThreatCheck this whe pa ep
+-- |'checkChecking' returns 'Nothing' if 'whereIsFig' ('Figure' 'King' 'Color') 'GameBoard' returns an empty list
+--
+-- otherwise it returns 'Just' '$' 'threatChecking' 'GameBoard' (first of the nonempty list 'whereIsFig' returned)
 checkChecking :: GameBoard -> Color -> PlayersAlive -> Maybe [Pos]
 checkChecking this who pa = do
   kingPos <- firstMaybe $ whereIsFig (Figure King who) this;
@@ -551,6 +552,15 @@ data Impossibility where
   NotAllEmpties :: Impossibility
   WeAreCapturingOurOwnPiece :: Impossibility
 
+-- |'checkImpossibility' returns:
+--
+-- - 'Just' 'ThereIsACreakAgainstUs' if NOT 'checkIfThereIsNoCreekAgainstUs'
+-- - 'Just' 'WeArePassingAnUnbridgedMoat' if 'checkIfWeArePassingAnUnbridgedMoat'
+-- - 'Just' 'WeAreCapturingThruMoats' if 'checkIfCapturingThruMoats'
+-- - 'Just' 'ThereIsACastlingImpossibility' if NOT 'checkIfNoCastlingImpossibility'
+-- - 'Just' 'NotAllEmpties' if NOT 'checkIfAllAreEmpties'
+-- - 'Just' 'WeAreCapturingOurOwnPiece' if 'checkIfCapturingOwnPiece'
+-- - 'Nothing' otherwise
 checkImpossibility :: StateMove -> Maybe Impossibility
 checkImpossibility sm
   | not $ checkIfThereIsNoCreekAgainstUs (move sm) = Just ThereIsACreakAgainstUs
