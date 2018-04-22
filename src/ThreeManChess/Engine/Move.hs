@@ -517,17 +517,18 @@ hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,File _ se))
   | otherwise = True
 hypoWouldBeNoCreak _ = True
 
+_oneThreatCheck :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore -> Pos -> Maybe Pos
+_oneThreatCheck this whe pa ep pos = do
+  who <- figColor <$> this whe;
+  tjf <- this pos;
+  if figColor tjf == who &&
+     isAlive pa (figColor tjf) &&
+     isThereAThreat this whe pos pa ep
+    then Just pos
+    else Nothing
 threatChecking :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore -> [Pos]
 threatChecking this whe pa ep =
-  fmap fromJust $ filter isJust $ (\pos -> do
-                                      who <- figColor <$> this whe;
-                                      tjf <- this pos;
-                                      if figColor tjf == who &&
-                                         isAlive pa (figColor tjf) &&
-                                         isThereAThreat this whe pos pa ep
-                                        then Just pos
-                                        else Nothing
-                                  ) <$> allPos
+  fmap fromJust $ filter isJust $ _oneThreatCheck this whe pa ep <$> allPos
 checkChecking :: GameBoard -> Color -> PlayersAlive -> Maybe [Pos]
 checkChecking this who pa = do
   kingPos <- firstMaybe $ whereIsFig (Figure King who) this;
