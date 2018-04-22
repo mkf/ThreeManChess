@@ -1,7 +1,5 @@
-{-# Language DeriveDataTypeable #-}
 module ThreeManChess.Engine.Figure where
 
-import Data.Data
 import ThreeManChess.Engine.Color
 import ThreeManChess.Engine.FigType
 -- import ThreeManChess.Engine.Piece
@@ -17,7 +15,7 @@ import ThreeManChess.Engine.FigType
 --   )
 
 -- data Figure = Figure {figType :: FigType, color :: Color} deriving (Eq, Show, Read, Data, Typeable)
-data Figure = Figure FigType Color deriving (Eq, Read, Data, Typeable)
+data Figure = Figure FigType Color deriving (Eq, Read)
 instance Show Figure where
   show (Figure a b) = show a ++ show b
 figType :: Figure -> FigType

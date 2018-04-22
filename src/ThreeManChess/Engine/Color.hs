@@ -1,9 +1,6 @@
-{-# Language DeriveDataTypeable #-}
 module ThreeManChess.Engine.Color where
 
-import Data.Data
-
-data Color = White | Gray | Black deriving (Eq, Ord, Read, Data, Typeable)
+data Color = White | Gray | Black deriving (Eq, Ord, Read)
 instance Show Color where
   show White = "Wh"
   show Gray = "Gr"
