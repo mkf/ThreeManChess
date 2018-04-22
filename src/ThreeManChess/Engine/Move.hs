@@ -573,6 +573,14 @@ checkImpossibility sm
 
 data HypoImpossibility = WouldBeCreak | WouldBeThruMoat | WouldNotAllEmpties | WouldBeSameColor | WouldGoToEmpty
 
+-- |'checkHypoImpossibility' returns:
+--
+-- - 'Just' 'WouldBeCreak' if NOT 'hypoWouldBeNoCreak'
+-- - 'Just' 'WouldBeThruMoat' if 'wouldBeThruMoats'
+-- - 'Just' 'WouldNotAllEmpties' if NOT 'wouldBeAllEmpties'
+-- - 'Just' 'WouldGoToEmpty' if 'wouldBeDestEmpty'
+-- - 'Just' 'WouldBeSameColor' if NOT 'wouldBeDestOpponent'
+-- - 'Nothing' otherwise
 checkHypoImpossibility :: HypoStateMove -> Maybe HypoImpossibility
 checkHypoImpossibility sm
   | not $ hypoWouldBeNoCreak (hypoMove sm) = Just WouldBeCreak
