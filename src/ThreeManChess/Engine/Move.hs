@@ -498,7 +498,12 @@ wouldBeThruMoats = not.isEmptyList.moatsHM
 -- |'checkIfWeArePassingAnUnbridgedMoat' tells whether there are any unbridged moats on our way
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
 checkIfWeArePassingAnUnbridgedMoat sm = not.isEmptyList $ filter (Unbridged==) $ fmap (isBridged $ moatsState $ before sm) $ moatsM $ move sm
-
+-- |'checkIfThereIsNoCreekAgainstUs' iff at least one of the following:
+--
+--  - is not a (MkInwardPawnMove (Walk (Capturing _)),_)
+--  - is a (MkInwardPawnMove (Walk (Capturing _)), (r, _)) and r>MiddleOuter
+--  - is ('MkInwardPawnMove' ('Walk' ('Capturing' 'Pluswards')),(r ≤ 'MiddleOuter', 'sevenSegmentEight'))
+--  - is ('MkInwardPawnMove' ('Walk' ('Capturing' 'Minuswards')),(r ≤ 'MiddleOuter', 'zeroSegmentEight'))
 checkIfThereIsNoCreekAgainstUs :: BoundMoveT -> Bool
 checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,File _ se))
   | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
