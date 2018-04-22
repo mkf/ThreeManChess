@@ -550,6 +550,7 @@ data Impossibility where
   ThereIsACastlingImpossibility :: Impossibility
   NotAllEmpties :: Impossibility
   WeAreCapturingOurOwnPiece :: Impossibility
+  UnsatisfiedPromReq :: Bool -> Impossibility
 
 -- |'checkImpossibility' returns:
 --
@@ -589,9 +590,9 @@ checkHypoImpossibility sm
   | not $ wouldBeDestOpponent sm = Just WouldBeSameColor
   | otherwise = Nothing
 
-data Cannot = Impossible Impossibility | UnsatisfiedPromReq
 -- data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThruMoatException
-data Couldnt = Cant Cannot | WouldInitiateCheckThruMoat
+data Cannot = Impossible Impossibility | WouldInitiateCheckThruMoat
+data Couldnt = Cant Cannot | WouldCauseCheckToUs
 
 -- _threatCheckingHelperOne :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore
 -- |'_isThereAThreatHelperOne' returns a boolean value whether there are any possible threating moves from to
