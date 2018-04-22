@@ -509,6 +509,8 @@ checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,File _ 
   | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
   | otherwise = True
 checkIfThereIsNoCreekAgainstUs _ = True
+-- |'hypoWouldBeNoCreak' is just like 'checkIfThereIsNoCreekAgainstUs'
+-- but for ('HypoInwardPawnMove' d,(r ≤ 'MiddleOuter' ,'File' _  'zeroSegmentEight' OR 'sevenSegmentEight'))
 hypoWouldBeNoCreak :: BoundHypoCapMoveT -> Bool
 hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,File _ se))
   | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
