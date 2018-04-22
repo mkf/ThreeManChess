@@ -1,9 +1,6 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-
 module ThreeManChess.Engine.Directions where
 
 import ThreeManChess.Engine.Pos
-import Data.Data
 
 class --(Eq a , Read a, Show a) =>
   Reversable a where
@@ -12,11 +9,11 @@ data Orientation = Rankwise | Filewise deriving (Eq, Read, Show)
 perpendicularTo :: Orientation -> Orientation
 perpendicularTo Rankwise = Filewise
 perpendicularTo Filewise = Rankwise
-data RankwiseDirection = Inwards | Outwards deriving (Eq, Data, Typeable, Show)-- deriving StraightDirection
+data RankwiseDirection = Inwards | Outwards deriving (Eq, Show)-- deriving StraightDirection
 instance Reversable RankwiseDirection where
   rever Inwards = Outwards
   rever Outwards = Inwards
-data FilewiseDirection = Pluswards | Minuswards deriving (Eq, Data, Typeable, Show)-- deriving StraightDirection
+data FilewiseDirection = Pluswards | Minuswards deriving (Eq, Show)-- deriving StraightDirection
 instance Reversable FilewiseDirection where
   rever Pluswards = Minuswards
   rever Minuswards = Pluswards
