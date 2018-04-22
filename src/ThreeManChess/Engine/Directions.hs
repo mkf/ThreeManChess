@@ -35,6 +35,11 @@ addCount Once Once = OnceMore Once
 addCount a Once = OnceMore a
 addCount Once a = OnceMore a
 addCount (OnceMore a) (OnceMore b) = OnceMore $ OnceMore $ addCount a b
+addCountMaybe :: Maybe Count -> Maybe Count -> Maybe Count
+addCountMaybe Nothing Nothing = Nothing
+addCountMaybe (Just x) Nothing = Just x
+addCountMaybe Nothing (Just x) = Just x
+addCountMaybe (Just x) (Just y) = Just $ addCount x y
 countFromPositiveInteger :: Integer -> Maybe Count
 countFromPositiveInteger 1 = Just Once
 countFromPositiveInteger a | a>1 = OnceMore <$> countFromPositiveInteger (a-1)

@@ -640,8 +640,12 @@ checkForCheckInitiatedThruMoat sm = ((not.isEmptyList $ moatsM $ move sm)&&) <$>
   Just $ uncurry (||) $ let f = fromMaybe False . checkThreatToColorKing sm in (f $ prev wCo, f $ next wCo)
 nextPlayer :: PlayersAlive -> Color -> Color
 nextPlayer pa c = if isAlive pa (next c) then next c else prev c
-afterHalfMoveClock :: StateMove -> Maybe Count
-afterHalfMoveClock _ = Just Once
+afterHalfMoveClock :: StateMove -> Maybe (Maybe Count)
+afterHalfMoveClock sm = do
+  whaType <- figType <$> (board $ before sm) (snd $ move sm);
+  tosm <- to $ move sm;
+  Just $ if whaType==InwardPawn || whaType==OutwardPawn ||
+            isJust ((board $ before sm) tosm) then Nothing else addCountMaybe (halfMoveClock $ before sm) $ Just Once
 afterPlayersAlive :: StateMove -> Maybe PlayersAlive
 afterPlayersAlive sm = Just $ playersAlive $ before sm
 incMaybeCount :: Maybe Count -> Count
@@ -652,9 +656,10 @@ simpleAfter sm = do
   b <- boardSimplyAfter sm;
   cp <- afterCastling (castlingPossibilities (before sm)) (move sm) (movesNext (before sm));
   paa <- afterPlayersAlive sm;
+  hmc <- afterHalfMoveClock sm;
   Just GameState { board=b, moatsState=afterMoatsState sm, movesNext=nextPlayer (playersAlive (before sm)) (movesNext (before sm))
                  , castlingPossibilities = cp, enPassantStore = afterEnPassantStore sm, fullMoveCounter = Just $ incMaybeCount (fullMoveCounter (before sm))
-                 , halfMoveClock = afterHalfMoveClock sm, playersAlive = paa }
+                 , halfMoveClock = hmc, playersAlive = paa }
 afterWOblahblah :: StateMove -> Maybe GameState
 afterWOblahblah sm = do
   sa <- simpleAfter sm;
