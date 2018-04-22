@@ -517,15 +517,13 @@ hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,File _ se))
   | otherwise = True
 hypoWouldBeNoCreak _ = True
 
--- |'_oneThreatCheck' returns 'Nothing' if at least one of the following is 'True':
+-- |'_oneThreatCheck' is iff NONE of the following is 'True':
 --
 --  - the square of the 'GameBoard' that is the first argument on 'Pos' that is the second argument is empty
 --  - the square of the 'GameBoard' that is the first argument on 'Pos' that is the fifth argument is empty
 --  - the figures that are on those two aforementioned fields are of different 'figColor'
 --  - the 'figColor' of the second one of those two aforementioned fields is dead in the 'PlayersAlive' which is the third arg
 --  - 'isThereAThreat' returns 'False' given arguments like that: 1st 2nd 5th 3rd 4th
---
---  Otherwise, '_oneThreatCheck' returns 'Just' the fifth argument
 _oneThreatCheck :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore -> Pos -> Bool
 _oneThreatCheck this whe pa ep pos = fromMaybe False $ do
   who <- figColor <$> this whe;
