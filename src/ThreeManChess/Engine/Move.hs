@@ -495,8 +495,10 @@ checkIfCapturingThruMoats sm = checkIfDestOpponent sm && (not.isEmptyList) (moat
 -- |'wouldBeThruMoats' IFF ('not' . 'isEmptyList' . 'moatsHM')
 wouldBeThruMoats :: BoundHypoCapMoveT -> Bool
 wouldBeThruMoats = not.isEmptyList.moatsHM
+-- |'checkIfWeArePassingAnUnbridgedMoat' tells whether there are any unbridged moats on our way
 checkIfWeArePassingAnUnbridgedMoat :: StateMove -> Bool
 checkIfWeArePassingAnUnbridgedMoat sm = not.isEmptyList $ filter (Unbridged==) $ fmap (isBridged $ moatsState $ before sm) $ moatsM $ move sm
+
 checkIfThereIsNoCreekAgainstUs :: BoundMoveT -> Bool
 checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,File _ se))
   | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
