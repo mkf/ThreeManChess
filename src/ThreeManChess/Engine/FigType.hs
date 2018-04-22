@@ -1,10 +1,9 @@
-{-# Language DeriveDataTypeable, DataKinds, KindSignatures #-}
+{-# Language DataKinds, KindSignatures #-}
 module ThreeManChess.Engine.FigType where
 
-import Data.Data
 -- import Data.Set as Set
 
-data FigType = InwardPawn | OutwardPawn | Rook | Knight | Bishop | King | Queen deriving (Eq, Read, Data, Typeable)
+data FigType = InwardPawn | OutwardPawn | Rook | Knight | Bishop | King | Queen deriving (Eq, Read)
 instance Show FigType where
   show InwardPawn = "↑"
   show OutwardPawn = "↓"
