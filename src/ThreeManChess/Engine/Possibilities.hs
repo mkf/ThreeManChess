@@ -1,4 +1,4 @@
-{-# Language DuplicateRecordFields,GADTs,RankNTypes,DeriveDataTypeable,ScopedTypeVariables,ExistentialQuantification,
+{-# Language DuplicateRecordFields,GADTs,RankNTypes,ScopedTypeVariables,ExistentialQuantification,
              LiberalTypeSynonyms,NamedFieldPuns,RecordWildCards,TypeFamilies,PatternSynonyms,FunctionalDependencies,
              FlexibleInstances,InstanceSigs,TypeFamilyDependencies,DataKinds,PolyKinds,ConstraintKinds,KindSignatures,
              TypeApplications,ImplicitParams,ImpredicativeTypes,PartialTypeSignatures,NamedWildCards #-}
