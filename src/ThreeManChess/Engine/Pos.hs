@@ -5,14 +5,18 @@ import ThreeManChess.Engine.Color
 
 -- data Rank = 0 | 1 | 2 | 3 | 4 | 5
 -- data File = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23
-data Rank = MostOuter | SecondOuter | MiddleOuter | MiddleInner | SecondInner | MostInner deriving (Eq, Ord, Read, Show)
+data Rank = MostOuter | SecondOuter | MiddleOuter | MiddleInner | SecondInner | MostInner
+  deriving (Eq, Ord, Read, Show)
 ranks :: [Rank]
 ranks = [MostOuter, SecondOuter, MiddleOuter, MiddleInner, SecondInner, MostInner]
 type ColorSegment = Color
-data SegmentHalf = FirstHalf | SecondHalf deriving (Eq, Ord, Read, Show)
-data SegmentQuarter = SegmentQuarter { half :: SegmentHalf , halfQuarter :: SegmentHalf }
+data SegmentHalf = FirstHalf | SecondHalf
   deriving (Eq, Ord, Read, Show)
-data SegmentEight = SegmentEight { segmentQuarter :: SegmentQuarter , quarterHalf :: SegmentHalf }
+data SegmentQuarter = SegmentQuarter
+  { half :: SegmentHalf , halfQuarter :: SegmentHalf }
+  deriving (Eq, Ord, Read, Show)
+data SegmentEight = SegmentEight
+  { segmentQuarter :: SegmentQuarter , quarterHalf :: SegmentHalf }
   deriving (Eq, Ord, Read, Show)
 data File = File { segmColor :: ColorSegment , colorSegmFile :: SegmentEight }
   deriving (Eq, Ord, Read, Show)
