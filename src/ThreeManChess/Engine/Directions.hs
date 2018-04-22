@@ -16,18 +16,13 @@ data RankwiseDirection = Inwards | Outwards deriving (Eq, Data, Typeable, Show)-
 instance Reversable RankwiseDirection where
   rever Inwards = Outwards
   rever Outwards = Inwards
-data FilewiseDirection = Pluswards | Minuswards deriving (Data, Typeable, Show)-- deriving StraightDirection
+data FilewiseDirection = Pluswards | Minuswards deriving (Eq, Data, Typeable, Show)-- deriving StraightDirection
 instance Reversable FilewiseDirection where
   rever Pluswards = Minuswards
   rever Minuswards = Pluswards
 filewiseInc :: FilewiseDirection -> File -> File
 filewiseInc Pluswards = plus
 filewiseInc Minuswards = minus
-instance Eq FilewiseDirection where
-  Pluswards == Pluswards = True
-  Minuswards == Minuswards = True
-  Pluswards == Minuswards = False
-  Minuswards == Pluswards = False
 data DiagonalDirection = DiagonalDirection RankwiseDirection FilewiseDirection deriving Show -- deriving LinearDirection
 rankwise :: DiagonalDirection -> RankwiseDirection
 rankwise (DiagonalDirection x _) = x
