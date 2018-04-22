@@ -592,13 +592,19 @@ checkHypoImpossibility sm
 data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThruMoatException
 
 -- _threatCheckingHelperOne :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore
+-- |'_isThereAThreatHelperOne' returns a boolean value whether there are any possible threating moves from to
+--
+-- first 'Pos' arg is the destination position, second 'Pos' arg is the from position
+--
+-- returns 'Nothing' if the from square of the 'GameBoard' is empty
 _isThereAThreatHelperOne :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassantStore -> Maybe Bool
 _isThereAThreatHelperOne this toP fromP pA ePS = do
-  figt <- fmap figType (this fromP);
-  Just $ let bef = hypoConstruct this (lastEnP ePS) pA in
-           let vemovs = hypoMovesFromToWith figt fromP toP in
-             --let vecs = vectorFromMoveT . disregardPromotionPossibOfEither . hypoMoveToNormalMove <$> vemovs in
-             isEmptyList $ fmap fromJust $ filter isJust $ checkHypoImpossibility . (\x -> HypoStateMove{hypoBefore=bef,hypoMove=(x,fromP)}) <$> vemovs
+  figt <- figType <$> this fromP;
+  Just $ not $ isEmptyList $ filter isNothing $
+    checkHypoImpossibility . (\x -> HypoStateMove{hypoBefore=hypoConstruct this (lastEnP ePS) pA,hypoMove=(x,fromP)}) <$> hypoMovesFromToWith figt fromP toP
+-- |'isThereAThreat' returns a boolean value whether there are any possible threating moves from to
+--
+-- first 'Pos' arg is the destination position, second 'Pos' arg is the from position
 isThereAThreat :: GameBoard -> Pos -> Pos -> PlayersAlive -> EnPassantStore -> Bool
 isThereAThreat this toP fromP pA ePS = fromMaybe False $ _isThereAThreatHelperOne this toP fromP pA ePS
 
