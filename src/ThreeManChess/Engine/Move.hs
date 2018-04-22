@@ -629,13 +629,15 @@ checkThreatToColorKing sm col = do
   tosm <- to $ move sm;
   wheKing <- firstMaybe $ whereIsFig (Figure King col) (board (before sm))
   newb <- boardSimplyAfter sm
-  Just $ isThereAThreat newb wheKing tosm (playersAlive (before sm)) (enPassantStore (before sm))
+  Just $ isAlive (playersAlive (before sm)) col && isThereAThreat newb wheKing tosm (playersAlive (before sm)) (enPassantStore (before sm))
+-- |'checkForCheckInitiatedThruMoat' is whether we pass any moats and cause check to any alive kings in this move
+--
+-- returns 'Nothing' if the from square is empty or destination pos uncalculable.
 checkForCheckInitiatedThruMoat :: StateMove -> Maybe Bool
 checkForCheckInitiatedThruMoat sm = ((not.isEmptyList $ moatsM $ move sm)&&) <$> do
   wCo <- whoMove sm;
-  a <- checkThreatToColorKing sm (prev wCo);
-  b <- checkThreatToColorKing sm (next wCo);
-  Just $ a && b
+  _ <- to $ move sm;
+  Just $ uncurry (||) $ let f = fromMaybe False . checkThreatToColorKing sm in (f $ prev wCo, f $ next wCo)
 nextPlayer :: PlayersAlive -> Color -> Color
 nextPlayer pa c = if isAlive pa (next c) then next c else prev c
 afterHalfMoveClock :: StateMove -> Maybe Count
