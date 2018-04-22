@@ -589,7 +589,9 @@ checkHypoImpossibility sm
   | not $ wouldBeDestOpponent sm = Just WouldBeSameColor
   | otherwise = Nothing
 
-data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThruMoatException
+data Cannot = Impossible Impossibility | UnsatisfiedPromReq
+-- data Cannot = Impossible Impossibility | WeMustPromote Bool | CheckInitiatedThruMoatException
+data Couldnt = Cant Cannot | WouldInitiateCheckThruMoat
 
 -- _threatCheckingHelperOne :: GameBoard -> Pos -> PlayersAlive -> EnPassantStore
 -- |'_isThereAThreatHelperOne' returns a boolean value whether there are any possible threating moves from to
