@@ -11,17 +11,11 @@ ranks = [MostOuter, SecondOuter, MiddleOuter, MiddleInner, SecondInner, MostInne
 type ColorSegment = Color
 data SegmentHalf = FirstHalf | SecondHalf deriving (Eq, Ord, Read, Show)
 data SegmentQuarter = SegmentQuarter { half :: SegmentHalf , halfQuarter :: SegmentHalf }
-  deriving (Ord, Read, Show)
-instance Eq SegmentQuarter where
-  x == y = half x == half y && halfQuarter x == halfQuarter y
+  deriving (Eq, Ord, Read, Show)
 data SegmentEight = SegmentEight { segmentQuarter :: SegmentQuarter , quarterHalf :: SegmentHalf }
-  deriving (Ord, Read, Show)
-instance Eq SegmentEight where
-  x == y = segmentQuarter x == segmentQuarter y && quarterHalf x == quarterHalf y
+  deriving (Eq, Ord, Read, Show)
 data File = File { segmColor :: ColorSegment , colorSegmFile :: SegmentEight }
-  deriving (Ord, Read, Show)
-instance Eq File where
-  x == y = segmColor x == segmColor y && colorSegmFile x == colorSegmFile y
+  deriving (Eq, Ord, Read, Show)
 opposite :: File -> File
 opposite (File c (SegmentEight (SegmentQuarter h q) f)) =
   File {segmColor= case h of FirstHalf -> next
