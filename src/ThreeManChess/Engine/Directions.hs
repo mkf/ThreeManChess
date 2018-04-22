@@ -20,15 +20,13 @@ instance Reversable FilewiseDirection where
 filewiseInc :: FilewiseDirection -> File -> File
 filewiseInc Pluswards = plus
 filewiseInc Minuswards = minus
-data DiagonalDirection = DiagonalDirection RankwiseDirection FilewiseDirection deriving Show -- deriving LinearDirection
+data DiagonalDirection = DiagonalDirection RankwiseDirection FilewiseDirection deriving (Eq, Show) -- deriving LinearDirection
 rankwise :: DiagonalDirection -> RankwiseDirection
 rankwise (DiagonalDirection x _) = x
 filewise :: DiagonalDirection -> FilewiseDirection
 filewise (DiagonalDirection _ x) = x
 data StraightDirecEBC = MkRankwiseDirecEBC RankwiseDirection | MkFilewiseDirecEBC FilewiseDirection deriving (Show, Eq)
 data LinearDirecEBC = MkStraightDirecEBC StraightDirecEBC | MkDiagonalDirecEBC DiagonalDirection deriving (Show, Eq)
-instance Eq DiagonalDirection where
-  (DiagonalDirection a b) == (DiagonalDirection c d) = (a == c) && (b == d)
 instance Reversable DiagonalDirection where
   rever (DiagonalDirection a b) = DiagonalDirection (rever a) (rever b)
 data Count = Once | OnceMore Count deriving (Eq, Read, Show)
