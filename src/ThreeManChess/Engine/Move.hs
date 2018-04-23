@@ -554,6 +554,7 @@ data Impossibility where
   ThereIsACastlingImpossibility :: Impossibility
   NotAllEmpties :: Impossibility
   WeAreCapturingOurOwnPiece :: Impossibility
+-- |'UnsatisfiedPromReq's 'Bool' tells whether 'isThisAPawnPromotionMove'
   UnsatisfiedPromReq :: Bool -> Impossibility
 
 -- |'checkImpossibility' returns:
@@ -564,6 +565,7 @@ data Impossibility where
 -- - 'Just' 'ThereIsACastlingImpossibility' if NOT 'checkIfNoCastlingImpossibility'
 -- - 'Just' 'NotAllEmpties' if NOT 'checkIfAllAreEmpties'
 -- - 'Just' 'WeAreCapturingOurOwnPiece' if 'checkIfCapturingOwnPiece'
+-- - 'Just' 'UnsatisfiedPromReq' 'isThisAPawnPromotionMove' if NOT 'checkIfPromotionPresenceIsOK'
 -- - 'Nothing' otherwise
 checkImpossibility :: StateMove -> Maybe Impossibility
 checkImpossibility sm
@@ -573,6 +575,7 @@ checkImpossibility sm
   | not $ checkIfNoCastlingImpossibility sm = Just ThereIsACastlingImpossibility
   | not $ checkIfAllAreEmpties sm = Just NotAllEmpties
   | checkIfCapturingOwnPiece sm = Just WeAreCapturingOurOwnPiece
+  | not $ checkIfPromotionPresenceIsOK (move sm) = Just $ UnsatisfiedPromReq $ isThisAPawnPromotionMove (fst $ move sm)
   | otherwise = Nothing
 
 data HypoImpossibility = WouldBeCreak | WouldBeThruMoat | WouldNotAllEmpties | WouldBeSameColor | WouldGoToEmpty
