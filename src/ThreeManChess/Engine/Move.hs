@@ -17,7 +17,7 @@ import ThreeManChess.Engine.CastlingPossibilities
 import ThreeManChess.Engine.EnPassantStore
 import ThreeManChess.Engine.Directions
 import Data.Maybe
-import Data.Functor
+--import Data.Functor
 
 data (Vec a) => BoundVec a = BoundVec a Pos
 
@@ -266,15 +266,33 @@ boardOperation StateMove{move=(mo, po), before=be} =
       whh <- whoMove (StateMove (mo,po) be);
       Just $ MoveWithReplacement (po,tosm) (Figure (desiredType a) whh)
     (MkInwardPawnMove (Walk (Capturing _))) -> do
-      tosm <- to (mo,po);
-      enpa <- enPassantFieldPos po;
-      Just $ MoveFromToOverwritingWithOtherDisappear (po,tosm) enpa
+      tosm <- to (mo,po); Just $ MoveFromToOverwriting po tosm
+      -- enpa <- enPassantFieldPos po;
+      -- Just $ MoveFromToOverwritingWithOtherDisappear (po,tosm) enpa
     (MkOutwardPawnMove (Capturing _,Nothing)) -> do
       tosm <- to (mo,po);
-      enpa <- enPassantFieldPos po;
-      Just $ MoveFromToOverwritingWithOtherDisappear (po,tosm) enpa
+      if checkIfIsEnPassant StateMove{move=(mo,po), before=be}
+        then do
+          enpa <- enPassantFieldPos po;
+          Just $ MoveFromToOverwritingWithOtherDisappear (po,tosm) enpa
+        else Just $ MoveFromToOverwriting po tosm
 
-
+hypoBoardOperation :: HypoStateMove -> Maybe GameBoardSingleChange
+hypoBoardOperation HypoStateMove{hypoBefore=be, hypoMove=(mo,po)} =
+  case mo of
+    (HypoQueenMove _) -> do tosm <- hTo (mo,po); Just $ MoveFromToOverwriting po tosm
+    (HypoKingMove _) -> do tosm <- hTo (mo,po); Just $ MoveFromToOverwriting po tosm
+    (HypoKnightMove _) -> do tosm <- hTo (mo,po); Just $ MoveFromToOverwriting po tosm
+    (HypoRookMove _) -> do tosm <- hTo (mo,po); Just $ MoveFromToOverwriting po tosm
+    (HypoBishopMove _) -> do tosm <- hTo (mo,po); Just $ MoveFromToOverwriting po tosm
+    (HypoInwardPawnMove _) -> do tosm <- hTo (mo,po); Just $ MoveFromToOverwriting po tosm
+    (HypoOutwardPawnMove _) -> do
+      tosm <- hTo (mo,po);
+      if checkIfWouldBeEnPassant HypoStateMove{hypoBefore=be, hypoMove=(mo,po)}
+        then do
+          enpa <- enPassantFieldPos po;
+          Just $ MoveFromToOverwritingWithOtherDisappear (po,tosm) enpa
+        else Just $ MoveFromToOverwriting po tosm
 --TODO not all of these must be boolean
 
 -- | 'checkIfFigTypeOK', whether figtype @from on board mathes the one of the MoveT constructor
@@ -309,6 +327,16 @@ whoHypoMove HypoStateMove{hypoMove = (_,l), hypoBefore = (f,_,_)} = fmap figColo
 checkIfIsEnPassant :: StateMove -> Bool
 checkIfIsEnPassant sm = case fst $ move sm of
   MkOutwardPawnMove (Capturing _,Nothing) -> (do tosm <- to (move sm); Just $ isNothing $ board (before sm) tosm) == Just True
+  _ -> False
+-- | 'checkIfWouldBeEnPassant' returns a boolean value of: if and only if all of the following are true:
+--
+--    - ('fst' ('hypoMove' sm)) is of ('HypoOutwardPawnMove' _)
+--       that is, is a move of an 'OutwardPawn' that is 'Capturing' and not getting a 'Promotion'
+--    - has ('hTo' ('hypoMove' sm)) return a Just value (the value is then referred to as tosm)
+--    - the destination square ('hypoBoard' ('hypoBefore' sm) tosm) is empty ('isNothing')
+checkIfWouldBeEnPassant :: HypoStateMove -> Bool
+checkIfWouldBeEnPassant sm = case fst $ hypoMove sm of
+  HypoOutwardPawnMove _ -> (do tosm <- hTo (hypoMove sm); Just $ isNothing $ hypoBoard (hypoBefore sm) tosm) == Just True
   _ -> False
 -- | the 'whatColorThereIsToEnPassant' function:
 --
