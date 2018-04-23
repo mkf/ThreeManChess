@@ -682,7 +682,11 @@ afterWOmoatCheck sm = do
     (True, True) -> Nothing
     (True, False) -> Just $ Right $ fromJust sa
     (False, _) -> Just $ Left $ fromJust cim
---    ctm <- checkForCheckInitiatedThruMoat sm;
+afterWOevalDeath :: StateMove -> Maybe (Either Cannot GameState)
+afterWOevalDeath sm = do
+  ctm <- checkForCheckInitiatedThruMoat sm;
+  awomc <- afterWOmoatCheck sm;
+  return $ if ctm then Left WouldInitiateCheckThruMoat else either (Left . Impossible) Right awomc
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
