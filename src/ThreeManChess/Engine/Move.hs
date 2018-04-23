@@ -701,9 +701,9 @@ andf x y q = x q && y q
 --   (\(x,y) -> do ft <- figType <$> (board s) x; return $ (hypoMovesFromToWith x y ft <&> (\z -> (z,x))))
 _listChecksWhetherCanMoveWOCheck :: GameState -> Color -> [()]
 _listChecksWhetherCanMoveWOCheck s w = do
-  x <- allPos
-  x <- [x | isJust $ board s x]
-  x <- [x | (w==) $ figColor $ fromJust $ board s x]
+  x <- allPos --allPos from
+  x <- [x | isJust $ board s x]  --that are not empty
+  x <- [x | (w==) $ figColor $ fromJust $ board s x] --that are of the color
   --  (x,y) <- do y <- allPos; [(x,y)]
   y <- allPos
   let ft = fromJust $ figType <$> board s x
