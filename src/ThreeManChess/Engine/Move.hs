@@ -694,7 +694,7 @@ retlif :: [a] -> (a -> Bool) -> [a]
 retlif = flip filter
 andf :: (a -> Bool) -> (a -> Bool) -> a -> Bool
 andf x y q = x q && y q
-(<&>) = flip fmap
+-- (<&>) = flip fmap
 -- whetherCanMoveWOCheck :: GameState -> Color ->  Maybe Bool
 -- whetherCanMoveWOCheck s w = (concat (allPos `retlif` (isJust.(board s)) `retlif` ((w==).figColor.fromJust.(board s)) <&>
 --                                      (\x -> allPos <&> (\y -> (x,y))))) <&>
