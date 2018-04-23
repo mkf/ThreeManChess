@@ -736,6 +736,7 @@ _listChecksWhetherCanMoveWOCheck s w = do
   y <- allPos
   let ft = fromJust $ figType <$> board s x
   z <- hypoMovesFromToWith ft x y
+--   i <- maybeToList $ checkHypoImpossibility HypoStateMove{hypoBefore=hypoConstruct (board s) (lastEnP (enPassantStore s)) (playersAlive s),hypoMove=z}
   []
 
 moatsM :: BoundMoveT -> [MoatLocalization]
