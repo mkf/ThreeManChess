@@ -17,6 +17,7 @@ import ThreeManChess.Engine.CastlingPossibilities
 import ThreeManChess.Engine.EnPassantStore
 import ThreeManChess.Engine.Directions
 import Data.Maybe
+import Data.Functor
 
 data (Vec a) => BoundVec a = BoundVec a Pos
 
@@ -546,6 +547,8 @@ checkChecking :: GameBoard -> Color -> PlayersAlive -> Maybe [Pos]
 checkChecking this who pa = do
   kingPos <- firstMaybe $ whereIsFig (Figure King who) this;
   Just $ threatChecking this kingPos pa (Nothing,Nothing)
+checkWhetherInCheck :: GameState -> Color -> Maybe [Pos]
+checkWhetherInCheck s w = checkChecking (board s) w (playersAlive s)
 
 data Impossibility where
   ThereIsACreakAgainstUs :: Impossibility
@@ -687,6 +690,15 @@ afterWOevalDeath sm = do
   ctm <- checkForCheckInitiatedThruMoat sm;
   awomc <- afterWOmoatCheck sm;
   return $ if ctm then Left WouldInitiateCheckThruMoat else either (Left . Impossible) Right awomc
+retlif :: [a] -> (a -> Bool) -> [a]
+retlif = flip filter
+andf :: (a -> Bool) -> (a -> Bool) -> a -> Bool
+andf x y q = x q && y q
+(<&>) = flip fmap
+-- whetherCanMoveWOCheck :: GameState -> Color ->  Maybe Bool
+-- whetherCanMoveWOCheck s w = (concat (allPos `retlif` (isJust.(board s)) `retlif` ((w==).figColor.fromJust.(board s)) <&>
+--                                      (\x -> allPos <&> (\y -> (x,y))))) <&>
+--   (\(x,y) -> do ft <- figType <$> (board s) x; return $ (hypoMovesFromToWith x y ft <&> (\z -> (z,x))))
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
