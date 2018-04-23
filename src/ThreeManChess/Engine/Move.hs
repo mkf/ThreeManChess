@@ -554,8 +554,8 @@ data Impossibility where
   ThereIsACastlingImpossibility :: Impossibility
   NotAllEmpties :: Impossibility
   WeAreCapturingOurOwnPiece :: Impossibility
--- |'UnsatisfiedPromReq's 'Bool' tells whether 'isThisAPawnPromotionMove'
   UnsatisfiedPromReq :: Bool -> Impossibility
+-- ^'UnsatisfiedPromReq's 'Bool' tells whether 'isThisAPawnPromotionMove'
 
 -- |'checkImpossibility' returns:
 --
