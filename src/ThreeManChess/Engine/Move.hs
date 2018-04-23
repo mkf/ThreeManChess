@@ -699,6 +699,16 @@ andf x y q = x q && y q
 -- whetherCanMoveWOCheck s w = (concat (allPos `retlif` (isJust.(board s)) `retlif` ((w==).figColor.fromJust.(board s)) <&>
 --                                      (\x -> allPos <&> (\y -> (x,y))))) <&>
 --   (\(x,y) -> do ft <- figType <$> (board s) x; return $ (hypoMovesFromToWith x y ft <&> (\z -> (z,x))))
+_listChecksWhetherCanMoveWOCheck :: GameState -> Color -> [()]
+_listChecksWhetherCanMoveWOCheck s w = do
+  x <- allPos
+  x <- [x | isJust $ board s x]
+  x <- [x | (w==) $ figColor $ fromJust $ board s x]
+  --  (x,y) <- do y <- allPos; [(x,y)]
+  y <- allPos
+  let ft = fromJust $ figType <$> board s x
+  z <- hypoMovesFromToWith ft x y
+  []
 
 moatsM :: BoundMoveT -> [MoatLocalization]
 moatsM (m, f) = moats f (vectorFromMoveT m)
