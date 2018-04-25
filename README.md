@@ -1,10 +1,13 @@
 # ThreeManChess
+[![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg](https://www.haskell.org)
 
 this is an implementation of www.3manchess.com
 
 https://archiet.platinum.edu.pl/3manchess
 
 previous wrong implementations
+
+the attempts have just started. i'm close to getting basic rules implementation right, but don't have much time rn so this will have to wait.
 
  - https://github.com/ArchieT/3manchess
  - https://github.com/ArchieT/jchess3man
