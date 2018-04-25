@@ -1,5 +1,6 @@
 # ThreeManChess
 [![Haskell Programming Language](https://img.shields.io/badge/language-Haskell-blue.svg](https://www.haskell.org)
+[![Build status](https://travis-ci.org/ArchieT/ThreeManChess.svg?branch=master)](https://travis-ci.org/ArchieT/ThreeManChess)
 
 this is an implementation of www.3manchess.com
 
