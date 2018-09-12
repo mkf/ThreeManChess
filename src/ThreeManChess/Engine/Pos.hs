@@ -3,153 +3,83 @@ module ThreeManChess.Engine.Pos where
 -- import Data.Data
 import ThreeManChess.Engine.Color
 
--- data Rank = 0 | 1 | 2 | 3 | 4 | 5
--- data File = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23
-data Rank = MostOuter | SecondOuter | MiddleOuter | MiddleInner | SecondInner | MostInner
-  deriving (Eq, Ord, Read, Show)
+{-@ type Int0toNexcl N = {v:Int | (v>=0) && (v<N) } @-}
+{-@ type Rank = Int0toNexcl 6 @-}
+type Rank = Int
+{-@ type File = Int0toNexcl 24 @-}
+type File = Int
 ranks :: [Rank]
-ranks = [MostOuter, SecondOuter, MiddleOuter, MiddleInner, SecondInner, MostInner]
+ranks = [0,1,2,3,4,5]
 type ColorSegment = Color
-data SegmentHalf = FirstHalf | SecondHalf
-  deriving (Eq, Ord, Read, Show)
-data SegmentQuarter = SegmentQuarter
-  { half :: SegmentHalf , halfQuarter :: SegmentHalf }
-  deriving (Eq, Ord, Read, Show)
-data SegmentEight = SegmentEight
-  { segmentQuarter :: SegmentQuarter , quarterHalf :: SegmentHalf }
-  deriving (Eq, Ord, Read, Show)
-data File = File { segmColor :: ColorSegment , colorSegmFile :: SegmentEight }
-  deriving (Eq, Ord, Read, Show)
+{-@ type SegmentHalf = Int0toNexcl 2 @-}
+type SegmentHalf = Int
+{-@ type SegmentQuarter = Int0toNexcl 4 @-}
+type SegmentQuarter = Int
+{-@ type SegmentEight = Int0toNexcl 8 @-}
+type SegmentEight = Int
+{-@ segmColor :: File -> ColorSegment @-}
+segmColor :: File -> ColorSegment
+segmColor f = colorSegm $ quot f 8
+{-@ segmFile :: File -> SegmentEight @-}
+segmFile :: File -> SegmentEight
+segmFile f = mod f 8
+{-@ fileToColorAndSegmFile :: File -> (ColorSegment, SegmentEight) @-}
+fileToColorAndSegmFile :: File -> (ColorSegment, SegmentEight)
+fileToColorAndSegmFile f = (segmColor f, segmFile f)
+fileFromColorAndSegmFile :: (ColorSegment, SegmentEight) -> File
+fileFromColorAndSegmFile (c,e) = intColorSegm c * 8 + e
 opposite :: File -> File
-opposite (File c (SegmentEight (SegmentQuarter h q) f)) =
-  File {segmColor= case h of FirstHalf -> next
-                             SecondHalf -> prev
-               $ c,
-        colorSegmFile=SegmentEight {
-           segmentQuarter = SegmentQuarter { half=otherSegmHalf h, halfQuarter=q },
-           quarterHalf = f }}
+opposite f
+  | f<12 = f+12
+  | otherwise = f-12
 minus :: File -> File
-minus File { segmColor=c, colorSegmFile= SegmentEight {segmentQuarter= (SegmentQuarter FirstHalf FirstHalf),
-                                                 quarterHalf = FirstHalf}} =
-  File {segmColor=prev c,
-        colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter SecondHalf SecondHalf,
-                                     quarterHalf = SecondHalf}}
-minus File { segmColor=c, colorSegmFile=f} =
-  case f of
-    SegmentEight {segmentQuarter= (SegmentQuarter FirstHalf FirstHalf),
-                  quarterHalf = FirstHalf} ->
-      File {segmColor=prev c,
-            colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter SecondHalf SecondHalf,
-                                         quarterHalf = SecondHalf}}
-    _ ->
-      File {segmColor=c, colorSegmFile=
-                     case f of
-                       SegmentEight{segmentQuarter=q,quarterHalf=SecondHalf} ->
-                         SegmentEight{segmentQuarter=q, quarterHalf=FirstHalf}
-                       SegmentEight{segmentQuarter=SegmentQuarter h SecondHalf} ->
-                         SegmentEight{segmentQuarter=SegmentQuarter h FirstHalf, quarterHalf=SecondHalf}
-                       SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf} ->
-                         SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=SecondHalf}
-                       _ -> error "case did not work"
-}
+minus 0 = 23
+minus f = f-1
 plus :: File -> File
-plus File { segmColor=c, colorSegmFile=f} =
-  case f of
-    SegmentEight {segmentQuarter= (SegmentQuarter SecondHalf SecondHalf),
-                  quarterHalf = SecondHalf} ->
-      File {segmColor=next c,
-            colorSegmFile = SegmentEight {segmentQuarter=SegmentQuarter FirstHalf FirstHalf,
-                                         quarterHalf = FirstHalf}}
-    _ ->
-      File {segmColor=c, colorSegmFile=
-                     case f of
-                       SegmentEight{segmentQuarter=q,quarterHalf=FirstHalf} ->
-                         SegmentEight{segmentQuarter=q, quarterHalf=SecondHalf}
-                       SegmentEight{segmentQuarter=SegmentQuarter h FirstHalf} ->
-                         SegmentEight{segmentQuarter=SegmentQuarter h SecondHalf, quarterHalf=SecondHalf}
-                       SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf} ->
-                         SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=FirstHalf}
-                       _ -> error "case did not work"
-}
+plus 23 = 0
+plus f = f+1
+{-@ mirrorHalf :: SegmentHalf -> SegmentHalf @-}
 mirrorHalf :: SegmentHalf -> SegmentHalf
-mirrorHalf FirstHalf = SecondHalf
-mirrorHalf SecondHalf = FirstHalf
+mirrorHalf 0 = 1
+mirrorHalf 1 = 0
+{-@ plusHalf :: SegmentHalf -> Maybe SegmentHalf @-}
 plusHalf :: SegmentHalf -> Maybe SegmentHalf
-plusHalf FirstHalf = Just SecondHalf
-plusHalf SecondHalf = Nothing
+plusHalf 0 = Just 1
+plusHalf 1 = Nothing
+{-@ minusHalf :: SegmentHalf -> Maybe SegmentHalf @-}
 minusHalf :: SegmentHalf -> Maybe SegmentHalf
-minusHalf SecondHalf = Just FirstHalf
-minusHalf FirstHalf = Nothing
+minusHalf 1 = Just 0
+minusHalf 0 = Nothing
+{-@ mirrorQuarter :: SegmentQuarter -> SegmentQuarter @-}
 mirrorQuarter :: SegmentQuarter -> SegmentQuarter
-mirrorQuarter (SegmentQuarter a b) = SegmentQuarter (mirrorHalf a) (mirrorHalf b)
+mirrorQuarter n = mirrorHalf (quot n 2) * 2 + mirrorHalf (mod n 2)
+{-@ mirrorEight :: SegmentEight -> SegmentEight @-}
 mirrorEight :: SegmentEight -> SegmentEight
-mirrorEight (SegmentEight a b) = SegmentEight (mirrorQuarter a) (mirrorHalf b)
+mirrorEight n = mirrorQuarter (quot n 2) * 2 + mirrorHalf (mod n 2)
+{-@ plusQuarter :: SegmentQuarter -> Maybe SegmentQuarter @-}
 plusQuarter :: SegmentQuarter -> Maybe SegmentQuarter
-plusQuarter (SegmentQuarter x FirstHalf) = Just $ SegmentQuarter x SecondHalf
-plusQuarter (SegmentQuarter a SecondHalf) = do { b <- plusHalf a; Just $ SegmentQuarter b FirstHalf }
+plusQuarter n = case (mod n 2) of
+  0 -> Just $ n+1
+  1 -> do {b <- plusHalf $ quot n 2; Just $ b*2}
+{-@ minusQuarter :: SegmentQuarter -> Maybe SegmentQuarter @-}
 minusQuarter :: SegmentQuarter -> Maybe SegmentQuarter
 minusQuarter = fmap mirrorQuarter . plusQuarter.mirrorQuarter
+{-@ plusEight :: SegmentEight -> Maybe SegmentEight @-}
 plusEight :: SegmentEight -> Maybe SegmentEight
-plusEight (SegmentEight x FirstHalf) = Just $ SegmentEight x SecondHalf
-plusEight (SegmentEight a SecondHalf) = do { b <- plusQuarter a; Just $ SegmentEight b FirstHalf }
+plusEight n = case (mod n 2) of
+  0 -> Just $ n+1
+  1 -> do {b <- plusQuarter $ quot n 2; Just $ b*2}
+{-@ minusEight :: SegmentEight -> Maybe SegmentEight @-}
 minusEight :: SegmentEight -> Maybe SegmentEight
 minusEight = fmap mirrorEight . plusEight.mirrorEight
 inw :: Rank -> Rank
-inw MostOuter = SecondOuter
-inw SecondOuter = MiddleOuter
-inw MiddleOuter = MiddleInner
-inw MiddleInner = SecondInner
-inw SecondInner = MostInner
-inw MostInner = MostInner
+inw 5 = 5
+inw n = n+1
 out :: Rank -> Maybe Rank
-out MostInner = Just SecondInner
-out SecondInner = Just MiddleInner
-out MiddleInner = Just MiddleOuter
-out MiddleOuter = Just SecondOuter
-out SecondOuter = Just MostOuter
-out MostOuter = Nothing
-rankFromInt :: Int -> Rank
-rankFromInt 0 = MostOuter
-rankFromInt 1 = SecondOuter
-rankFromInt 2 = MiddleOuter
-rankFromInt 3 = MiddleInner
-rankFromInt 4 = SecondInner
-rankFromInt 5 = MostInner
-rankFromInt _ = undefined
-intRank :: Rank -> Int
-intRank MostOuter = 0
-intRank SecondOuter = 1
-intRank MiddleOuter = 2
-intRank MiddleInner = 3
-intRank SecondInner = 4
-intRank MostInner = 5
-fileFromInt :: Int -> File
-fileFromInt x = if x>=0 && x<24 then File {segmColor = colorSegm $ div x 8,
-                                           colorSegmFile = segmEightFromInt $ mod x 8} else undefined
-intFile :: File -> Int
-intFile (File c s) = 8 * intColorSegm c + intColorSegmEight s
-segmEightFromInt :: Int -> SegmentEight
-segmEightFromInt x = if x>=0 && x<8 then SegmentEight { segmentQuarter = segmQuarterFromInt $ div x 2,
-                                                             quarterHalf = segmHalfFromInt $ mod x 2 } else undefined
-intColorSegmEight :: SegmentEight -> Int
-intColorSegmEight (SegmentEight q f) = 2 * intSegmQuarter q + intSegmHalf f
-segmQuarterFromInt :: Int -> SegmentQuarter
-segmQuarterFromInt x = if x>=0 && x<4 then SegmentQuarter { half = segmHalfFromInt $ div x 2,
-                                                            halfQuarter = segmHalfFromInt $ mod x 2 } else undefined
-intSegmQuarter :: SegmentQuarter -> Int
-intSegmQuarter (SegmentQuarter h q) = 2 * intSegmHalf h + intSegmHalf q
-segmHalfFromInt :: Int -> SegmentHalf
-segmHalfFromInt 0 = FirstHalf
-segmHalfFromInt 1 = SecondHalf
-segmHalfFromInt _ = undefined
-intSegmHalf :: SegmentHalf -> Int
-intSegmHalf FirstHalf = 0
-intSegmHalf SecondHalf = 1
-otherSegmHalf :: SegmentHalf -> SegmentHalf
-otherSegmHalf FirstHalf = SecondHalf
-otherSegmHalf SecondHalf = FirstHalf
+out 0 = Nothing
+out n = Just $ n-1
 
--- data Pos = Pos Rank File deriving (Eq, Show, Read)
+{-@ type Pos = (Rank, File) @-}
 type Pos = (Rank, File)
 rank :: Pos -> Rank
 rank (r, _) = r
@@ -157,4 +87,5 @@ file :: Pos -> File
 file (_, f) = f
 
 kfm :: SegmentEight
-kfm = SegmentEight { segmentQuarter = SegmentQuarter { half = SecondHalf, halfQuarter = FirstHalf }, quarterHalf = FirstHalf }
+-- kfm = SegmentEight { segmentQuarter = SegmentQuarter { half = SecondHalf, halfQuarter = FirstHalf }, quarterHalf = FirstHalf }
+kfm = 4 + 0 + 0

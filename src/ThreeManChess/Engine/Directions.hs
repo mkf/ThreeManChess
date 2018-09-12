@@ -17,6 +17,17 @@ data FilewiseDirection = Pluswards | Minuswards deriving (Eq, Show)-- deriving S
 instance Reversable FilewiseDirection where
   rever Pluswards = Minuswards
   rever Minuswards = Pluswards
+{-@ type PosInt = {v:Int|v>0} @-}
+{-@ type NNegInt = {v:Int|v>=0} @-}
+{-@ maybePosInt :: NNegInt -> Maybe PosInt @-}
+maybePosInt :: Int -> Maybe Int
+maybePosInt n
+  | n==0 = Nothing
+  | n>0 = Just n
+{-@ pmMod24Oper :: FilewiseDirection -> NNegInt -> File -> File @-}
+pmMod24Oper :: FilewiseDirection -> Int -> File -> File
+pmMod24Oper Pluswards n f = mod (f + n) 24
+pmMod24Oper Minuswards n f = mod (f + 24 - n) 24
 filewiseInc :: FilewiseDirection -> File -> File
 filewiseInc Pluswards = plus
 filewiseInc Minuswards = minus
@@ -29,43 +40,8 @@ data StraightDirecEBC = MkRankwiseDirecEBC RankwiseDirection | MkFilewiseDirecEB
 data LinearDirecEBC = MkStraightDirecEBC StraightDirecEBC | MkDiagonalDirecEBC DiagonalDirection deriving (Show, Eq)
 instance Reversable DiagonalDirection where
   rever (DiagonalDirection a b) = DiagonalDirection (rever a) (rever b)
-data Count = Once | OnceMore Count deriving (Eq, Read, Show)
-addCount :: Count -> Count -> Count
-addCount Once Once = OnceMore Once
-addCount a Once = OnceMore a
-addCount Once a = OnceMore a
-addCount (OnceMore a) (OnceMore b) = OnceMore $ OnceMore $ addCount a b
-addCountMaybe :: Maybe Count -> Maybe Count -> Maybe Count
-addCountMaybe Nothing Nothing = Nothing
-addCountMaybe (Just x) Nothing = Just x
-addCountMaybe Nothing (Just x) = Just x
-addCountMaybe (Just x) (Just y) = Just $ addCount x y
-countFromPositiveInteger :: Integer -> Maybe Count
-countFromPositiveInteger 1 = Just Once
-countFromPositiveInteger a | a>1 = OnceMore <$> countFromPositiveInteger (a-1)
-                           | otherwise = Nothing
+
 data PlusMinus a = Plus a | Minus a deriving (Eq, Read, Show)
 absPlusMinus :: PlusMinus a -> a
 absPlusMinus (Plus a) = a
 absPlusMinus (Minus a) = a
-substractCount :: Count -> Count -> Maybe (PlusMinus Count)
-substractCount Once Once = Nothing
-substractCount (OnceMore a) Once = Just $ Plus a
-substractCount Once (OnceMore a) = Just $ Minus a
-substractCount (OnceMore a) (OnceMore b) = substractCount a b
-absSubstractCount :: Count -> Count -> Maybe Count
-absSubstractCount = curry $ fmap absPlusMinus . uncurry substractCount
-nonNegativeSubstractCount :: Count -> Count -> Maybe Count
-nonNegativeSubstractCount Once Once = Nothing
-nonNegativeSubstractCount (OnceMore a) Once = Just a
-nonNegativeSubstractCount (OnceMore a) (OnceMore b) = nonNegativeSubstractCount a b
-nonNegativeSubstractCount _ _ = undefined
-positiveSubstractCount :: Count -> Count -> Count
-positiveSubstractCount (OnceMore a) Once = a
-positiveSubstractCount (OnceMore a) (OnceMore b) = positiveSubstractCount a b
-positiveSubstractCount _ _ = undefined
-instance Ord Count where
-  Once `compare` Once = EQ
-  OnceMore a `compare` OnceMore b = a `compare` b
-  Once `compare` OnceMore _ = LT
-  OnceMore _ `compare` Once = GT

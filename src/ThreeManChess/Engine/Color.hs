@@ -1,5 +1,8 @@
 module ThreeManChess.Engine.Color where
 
+{-@ type Int0toNexcl N = {v:Int | (v>=0) && (v<N) } @-}
+{-@ type ColorInt = Int0toNexcl 3 @-}
+type ColorInt = Int
 data Color = White | Gray | Black deriving (Eq, Ord, Read)
 instance Show Color where
   show White = "Wh"
@@ -17,11 +20,13 @@ prev Gray = White
 prev White = Black
 colors :: [Color]
 colors = [White, Gray, Black]
+{-@ colorSegm :: ColorInt -> Color @-}
 colorSegm :: Int -> Color
 colorSegm 0 = White
 colorSegm 1 = Gray
 colorSegm 2 = Black
 colorSegm _ = undefined
+{-@ intColorSegm :: Color -> ColorInt @-}
 intColorSegm :: Color -> Int
 intColorSegm White = 0
 intColorSegm Gray = 1

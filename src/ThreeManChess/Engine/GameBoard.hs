@@ -11,17 +11,16 @@ type GameBoardSingleChange = BoardSingleChange Figure
 empty :: GameBoard
 empty _ = Nothing
 segmEightStarting :: SegmentEight -> FigType
-segmEightStarting (SegmentEight (SegmentQuarter x y) z)
-  | x==y && y==z = Rook
-  | x==y = Knight
-  | x==z = Bishop
-  | x==FirstHalf && y==SecondHalf && z==SecondHalf = Queen
-  | x==SecondHalf && y==FirstHalf && z==FirstHalf = King
-  | otherwise = undefined
+segmEightStarting n -- (SegmentEight (SegmentQuarter x y) z)
+  | n==0 || n==7 = Rook --x==y && y==z = Rook
+  | n==1 || n==6 = Knight -- x==y
+  | n==2 || n==5 = Bishop -- x==z
+  | n==3 = Queen -- x==FirstHalf && y==SecondHalf && z==SecondHalf = Queen
+  | n==4 = King  -- x==SecondHalf && y==FirstHalf && z==FirstHalf = King
 
 startBoard :: GameBoard
-startBoard (SecondOuter, File c _) = Just $ Figure InwardPawn c
-startBoard (MostOuter, File c s) = Just $ Figure (segmEightStarting s) c
+startBoard (1, f) = Just $ Figure InwardPawn (segmColor f)
+startBoard (0, f) = Just $ Figure (segmEightStarting $ segmFile f) (segmColor f)
 startBoard _ = Nothing
 
 whereIsMaybeFig :: Maybe Figure -> GameBoard -> [Pos]

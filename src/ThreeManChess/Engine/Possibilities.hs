@@ -20,58 +20,26 @@ class (Reversable a, Eq a-- , Ord a
   tailRankInvol :: LinearVec a -> Maybe (Either (Rank -> LinearVec a) (LinearVec a))
   addOne :: a -> Pos -> Maybe Pos
 instance LinearDirection RankwiseDirection where
-  tailRankInvol (LinearVec _ Once) = Nothing
-  tailRankInvol (LinearVec Inwards (OnceMore c)) = Just $ Left (\x -> LinearVec (case x of MostInner -> Outwards
-                                                                                           _ -> Inwards) c)
-  tailRankInvol (LinearVec Outwards (OnceMore c)) = Just $ Right (LinearVec Outwards c)
-  addOne Inwards (MostInner, file) = Just (MostInner, opposite file)
+  tailRankInvol (LinearVec _ 1) = Nothing
+  tailRankInvol (LinearVec Inwards c) = Just $ Left (\x -> LinearVec (case x of 5 -> Outwards
+                                                                                _ -> Inwards) (c-1))
+  tailRankInvol (LinearVec Outwards c) = Just $ Right (LinearVec Outwards (c-1))
+  addOne Inwards (5, file) = Just (5, opposite file)
   addOne Inwards (rank, file) = Just (inw rank, file)
   addOne Outwards (rank, file) =
     do { o <- out rank;
          return (o, file) }
 instance LinearDirection FilewiseDirection where
-  tailRankInvol (LinearVec _ Once) = Nothing
-  tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
+  tailRankInvol (LinearVec _ 1) = Nothing
+  tailRankInvol (LinearVec d c) = Just $ Right (LinearVec d (c-1))
   addOne w (rank, file) = Just (rank, filewiseInc w file)
 instance LinearDirection DiagonalDirection where
-  tailRankInvol (LinearVec _ Once) = Nothing
-  tailRankInvol (LinearVec (DiagonalDirection Inwards f) (OnceMore c)) =
-    Just $ Left (\x -> LinearVec (case x of MostInner -> DiagonalDirection Outwards (rever f)
-                                            _ -> DiagonalDirection Inwards f) c)
-  tailRankInvol (LinearVec d (OnceMore c)) = Just $ Right (LinearVec d c)
-  addOne (DiagonalDirection Inwards p) (MostInner, File c (SegmentEight q r)) =
-    Just
-    (MostInner,
-     case p of
-       Pluswards ->
-         case q of
-           SegmentQuarter SecondHalf SecondHalf ->
-             File{segmColor=prev c,
-                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf,quarterHalf=r}}
-           SegmentQuarter SecondHalf FirstHalf ->
-             File{segmColor=next c,
-                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf, quarterHalf=r}}
-           SegmentQuarter FirstHalf SecondHalf ->
-             File{segmColor=next c,
-                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
-           SegmentQuarter FirstHalf FirstHalf ->
-             File{segmColor=next c,
-                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
-       Minuswards ->
-         case q of
-           SegmentQuarter FirstHalf FirstHalf ->
-             File{segmColor=next c,
-                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf SecondHalf,quarterHalf=r}}
-           SegmentQuarter SecondHalf SecondHalf ->
-             File{segmColor=prev c,
-                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter SecondHalf FirstHalf, quarterHalf=r}}
-           SegmentQuarter SecondHalf FirstHalf ->
-             File{segmColor=prev c,
-                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf SecondHalf, quarterHalf=r}}
-           SegmentQuarter FirstHalf SecondHalf ->
-             File{segmColor=prev c,
-                  colorSegmFile=SegmentEight{segmentQuarter=SegmentQuarter FirstHalf FirstHalf, quarterHalf=r}}
-    )
+  tailRankInvol (LinearVec _ 1) = Nothing
+  tailRankInvol (LinearVec (DiagonalDirection Inwards f) c) =
+    Just $ Left (\x -> LinearVec (case x of 5 -> DiagonalDirection Outwards (rever f)
+                                            _ -> DiagonalDirection Inwards f) (c-1))
+  tailRankInvol (LinearVec d c) = Just $ Right (LinearVec d (c-1))
+  addOne (DiagonalDirection Inwards p) (5, f) = Just (5, pmMod24Oper p 10 f)
   addOne (DiagonalDirection Inwards p) (rank, file) = Just (inw rank, filewiseInc p file)
   addOne (DiagonalDirection Outwards p) (rank, file) =
     do { o <- out rank; return (o, filewiseInc p file)}
@@ -181,31 +149,25 @@ instance InterfaceVecEBC VecEBC where
   -- flipMoatsEBC (MkCastlingVecEBC x) = flip moats x
   -- flipMoatsEBC (MkPawnJumpByTwoVecEBC x) = flip moats x
 _xrqnmv :: SegmentEight -> SegmentEight -> Maybe (Rank, FilewiseDirection)
-_xrqnmv (SegmentEight (SegmentQuarter SecondHalf SecondHalf) FirstHalf) (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) =
-  Just (SecondOuter, Pluswards)
-_xrqnmv (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) (SegmentEight (SegmentQuarter FirstHalf FirstHalf) SecondHalf) =
-  Just (SecondOuter, Pluswards)
-_xrqnmv (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) =
-  Just (MiddleOuter, Pluswards)
-_xrqnmv (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) (SegmentEight (SegmentQuarter SecondHalf SecondHalf) FirstHalf) =
-  Just (SecondOuter, Minuswards)
-_xrqnmv (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) =
-  Just (MiddleOuter, Minuswards)
-_xrqnmv (SegmentEight (SegmentQuarter FirstHalf FirstHalf) SecondHalf) (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) =
-  Just (SecondOuter, Minuswards)
+_xrqnmv 6 0 = Just (1, Pluswards)
+_xrqnmv 7 1 = Just (1, Pluswards)
+_xrqnmv 7 0 = Just (2, Pluswards)
+_xrqnmv 0 6 = Just (1, Minuswards)
+_xrqnmv 0 7 = Just (2, Minuswards)
+_xrqnmv 1 7 = Just (1, Minuswards)
 _xrqnmv _ _ = Nothing
 _xoreq :: Pos -> Pos -> Maybe Bool
-_xoreq (fr,File _ fs) (tr, File _ ts)
-  | tr>MiddleOuter && fr>MiddleOuter = Nothing
+_xoreq (fr,fswc) (tr, tswc)
+  | tr>2 && fr>2 = Nothing
   | otherwise =
-      do (w,_) <- _xrqnmv fs ts;
+      do (w,_) <- _xrqnmv (segmFile fswc) (segmFile tswc);
          Just $ case fr of
-                  MostOuter -> tr==w
-                  _ -> fr==w && tr==MostOuter
+                  0 -> tr==w
+                  _ -> fr==w && tr==0
 moatKnight :: Pos -> KnightVec -> Maybe MoatLocalization
 moatKnight f v = do
   to <- add f v;
-  (_,wd) <- _xrqnmv (colorSegmFile (file f)) (colorSegmFile (file to));
+  (_,wd) <- _xrqnmv (segmFile (file f)) (segmFile (file to));
   xo <- _xoreq f to;
   if xo then Just (onDirecLoc wd (segmColor (file f))) else Nothing
 instance Eq StraightVecEBC where
@@ -226,23 +188,24 @@ instance Eq VecEBC where
 class (Vec a, Reversable a) => ReversableVec a
 -- instance (Reversable a) => Vec (ReversableVec a) where
 --   reverMaybe x = Just $ rever x
-passTimes :: (a -> a) -> Count -> a -> a
-passTimes f Once a = f a
-passTimes f (OnceMore c) a = passTimes f c (f a)
+{-@ passTimes :: (a -> a) -> PosInt -> a -> a @-}
+passTimes :: (a -> a) -> Int -> a -> a
+passTimes f 1 a = f a
+passTimes f c a = passTimes f (c-1) (f a)
 data Castling = QueensideCastling | KingsideCastling deriving Show -- deriving (Vec)
 rookGoesInCastling :: Castling -> SegmentEight
 rookGoesInCastling ca = fromJust $ (case ca of
                                       KingsideCastling -> plusEight
                                       QueensideCastling -> minusEight) kfm
 rookTo :: Castling -> Color -> Pos
-rookTo ca co = (MostOuter, File co $ rookGoesInCastling ca)
+rookTo ca co = (0, fileFromColorAndSegmFile (co, rookGoesInCastling ca))
 rookFrom :: Castling -> Color -> Pos
-rookFrom QueensideCastling co = (MostOuter, File co zeroSegmentEight)
-rookFrom KingsideCastling co = (MostOuter, File co sevenSegmentEight)
+rookFrom QueensideCastling co = (0, fileFromColorAndSegmFile (co, 0))
+rookFrom KingsideCastling co = (0, fileFromColorAndSegmFile (co, 7))
 emptiesForCastling :: Castling -> [SegmentEight]
-emptiesForCastling KingsideCastling = [fromJust $ plusEight kfm, passTimes (fromJust.plusEight) (OnceMore Once) kfm]
-emptiesForCastling QueensideCastling = [fromJust $ minusEight kfm, passTimes (fromJust.minusEight) (OnceMore Once) kfm,
-                                        passTimes (fromJust.minusEight) (OnceMore $ OnceMore Once) kfm]
+emptiesForCastling KingsideCastling = [fromJust $ plusEight kfm, passTimes (fromJust.plusEight) 2 kfm]
+emptiesForCastling QueensideCastling = [fromJust $ minusEight kfm, passTimes (fromJust.minusEight) 2 kfm,
+                                        passTimes (fromJust.minusEight) 3 kfm]
 instance Eq Castling where
   QueensideCastling == QueensideCastling = True
   QueensideCastling == KingsideCastling = False
@@ -250,37 +213,35 @@ instance Eq Castling where
   KingsideCastling == KingsideCastling = True
 instance Vec Castling where
   reverMaybe _ = Nothing
-  add (MostOuter, File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf)) QueensideCastling =
-    Just (MostOuter, File{segmColor=c,
-                             colorSegmFile=SegmentEight{
-                                segmentQuarter=SegmentQuarter {
-                                    half=FirstHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}})
-  add _ QueensideCastling = undefined
-  add (MostOuter, File c (SegmentEight (SegmentQuarter SecondHalf FirstHalf) FirstHalf)) KingsideCastling =
-    Just (MostOuter, File{segmColor=c,
-                             colorSegmFile=SegmentEight{
-                                segmentQuarter=SegmentQuarter {
-                                    half=SecondHalf, halfQuarter=SecondHalf}, quarterHalf=FirstHalf}})
-  add _ KingsideCastling = undefined
-  emptiesFrom from v = Just $ assert ( colorSegmFile (file from) == kfm )
-                       (assert ( rank from == MostOuter ) (fmap (\x -> (MostOuter,File (segmColor $ file from) x))
-                                                            (emptiesForCastling v)))
+  add (r, f) cas
+    | r==0 && segmFile f == 4 = Just 
+        (0, 
+         fileFromColorAndSegmFile 
+          (segmColor f, 
+            case cas of
+              QueensideCastling -> 2
+              KingsideCastling -> 6))
+    | otherwise = undefined
+  emptiesFrom from v = Just $ assert ( segmFile (file from) == kfm )
+                       (assert ( rank from == 0 ) (fmap (\x -> (0, fileFromColorAndSegmFile (segmColor $ file from, x)))
+                                                        (emptiesForCastling v)))
 data PawnJumpByTwo = PawnJumpByTwo deriving Show --deriving (Vec)
 enPassantField :: File -> Pos
-enPassantField f = (MiddleOuter, f)
+enPassantField f = (2, f)
 enPassantFieldPos :: Pos -> Maybe Pos
-enPassantFieldPos (SecondOuter,f) = Just $ enPassantField f
+enPassantFieldPos (1,f) = Just $ enPassantField f
 enPassantFieldPos _ = Nothing
 instance Eq PawnJumpByTwo where
   PawnJumpByTwo == PawnJumpByTwo = True
 instance Vec PawnJumpByTwo where
   reverMaybe PawnJumpByTwo = Nothing
-  add (SecondOuter, f) PawnJumpByTwo = Just (MiddleInner, f)
+  add (1, f) PawnJumpByTwo = Just (3, f)
   add _ PawnJumpByTwo = Nothing
   emptiesFrom from PawnJumpByTwo = do { e <- enPassantFieldPos from; t <- add from PawnJumpByTwo; Just [e, t] }
 -- data (LinearDirection a) => LinearVec a = LinearVec a Count --deriving (Ord)
+{-@ data LinearVec a = LinearVec (forall a. x:LinearDirection a) PosInt @-}
 data LinearVec a where
-  LinearVec :: LinearDirection a => a -> Count -> LinearVec a
+  LinearVec :: LinearDirection a => a -> Int -> LinearVec a
 data LinearVecC = forall a . LinearDirection a => MkLinearVecC (LinearVec a)
 -- data LinearVecC where
 --   MkLinearVecC :: LinearDirection a => a -> LinearVecC (LinearVec a)
@@ -289,7 +250,8 @@ data StraightVecC = forall a . StraightDirection a => MkStraightVecC (LinearVec 
 --   MkStraightVecC :: StraightDirection a => a -> StraightVecC (LinearVec a)
 direction :: (LinearDirection a) => LinearVec a -> a
 direction (LinearVec d _) = d
-count :: (LinearDirection a) => LinearVec a -> Count
+{-@ count :: (LinearDirection a) => LinearVec a -> PosInt @-}
+count :: (LinearDirection a) => LinearVec a -> Int
 count (LinearVec _ c) = c
 -- instance (LinearDirection a) => Ord (LinearVec a)
 instance (LinearDirection a) => ReversableVec (LinearVec a)
@@ -299,51 +261,51 @@ instance (LinearDirection t) => Eq (LinearVec t) where
   (LinearVec a c) == (LinearVec b d) = (a == b) && (c == d)
 instance (LinearDirection a) => Vec (LinearVec a) where
   reverMaybe x = Just $ rever x
-  add p (LinearVec d Once) = addOne d p
+  add p (LinearVec d 1) = addOne d p
   add p m = foldl _addMaybe (Just p) (unitsInvolRank m (rank p))
-  emptiesFrom _ (LinearVec _ Once) = Just []
+  emptiesFrom _ (LinearVec _ 1) = Just []
   emptiesFrom p (LinearVec d c) =  addOne d p >>= (\pp -> Just $ pp:_emptiesFromMust pp (LinearVec d c))
 
 zeroSegmentEight :: SegmentEight
-zeroSegmentEight = SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf
+zeroSegmentEight = 0
 sevenSegmentEight :: SegmentEight
-sevenSegmentEight = SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf
+sevenSegmentEight = 7
 moatFilewise :: Pos -> FilewiseDirection -> Maybe MoatLocalization
-moatFilewise (MostOuter, File col s) d
-  | s==zeroSegmentEight && d==Minuswards = Just $ onDirecLoc Minuswards col
-  | s==sevenSegmentEight && d==Pluswards = Just $ onDirecLoc Pluswards col
+moatFilewise (0, f) d
+  | (segmFile f)==0 && d==Minuswards = Just $ onDirecLoc d (segmColor f)
+  | (segmFile f)==7 && d==Pluswards = Just $ onDirecLoc d (segmColor f)
   | otherwise = Nothing
 moatFilewise _ _ = Nothing
 moatsFilewise :: Pos -> LinearVec FilewiseDirection -> [MoatLocalization]
-moatsFilewise p (LinearVec d Once) = maybeToList $ moatFilewise p d
-moatsFilewise p (LinearVec d (OnceMore c)) = maybeToList (moatFilewise p d) ++ moatsFilewise p (LinearVec d c)
+moatsFilewise p (LinearVec d 1) = maybeToList $ moatFilewise p d
+moatsFilewise p (LinearVec d c) = maybeToList (moatFilewise p d) ++ moatsFilewise p (LinearVec d (c-1))
 moatsDiagonal :: Pos -> LinearVec DiagonalDirection -> [MoatLocalization]
 moatsDiagonal p x = maybeToList $ moatDiagonal p x
 moatsKnight :: Pos -> KnightVec -> [MoatLocalization]
 moatsKnight p x = maybeToList $ moatKnight p x
 
 moatDiagonal :: Pos -> LinearVec DiagonalDirection -> Maybe MoatLocalization
-moatDiagonal (MostOuter, File col (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf))
-  (LinearVec (DiagonalDirection Inwards Pluswards) _) = Just $ onDirecLoc Pluswards col
-moatDiagonal (MostOuter, File col (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf))
-  (LinearVec (DiagonalDirection Inwards Minuswards) _) = Just $ onDirecLoc Minuswards col
+moatDiagonal (0, f) (LinearVec (DiagonalDirection Inwards p) _)
+  | (segmFile f)==7 && p==Pluswards = Just $ onDirecLoc p (segmColor f)
+  | (segmFile f)==0 && p==Minuswards = Just $ onDirecLoc p (segmColor f)
+  | otherwise = Nothing
 moatDiagonal f (LinearVec (DiagonalDirection Outwards Pluswards) c) =
   do tove <- add f (LinearVec (DiagonalDirection Outwards Pluswards) c);
-     if rank tove == MostOuter then
-       case file tove of
-         File col (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf) -> Just $ onDirecLoc Minuswards col
+     if rank tove == 0 then
+       case segmFile (file tove) of
+         0 -> Just $ onDirecLoc Minuswards (segmColor (file tove))
          _ -> Nothing
      else Nothing
 moatDiagonal f (LinearVec (DiagonalDirection Outwards Minuswards) c) =
   do tove <- add f (LinearVec (DiagonalDirection Outwards Minuswards) c);
-     if rank tove == MostOuter then
-       case file tove of
-         File col (SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf) -> Just $ onDirecLoc Pluswards col
+     if rank tove == 0 then
+       case segmFile (file tove) of
+         7 -> Just $ onDirecLoc Pluswards (segmColor (file tove))
          _ -> Nothing
      else Nothing
 moatDiagonal _ _ = Nothing
 _emptiesFromMust :: (LinearDirection a) => Pos -> LinearVec a -> [Pos]
-_emptiesFromMust _ (LinearVec _ Once) = []
+_emptiesFromMust _ (LinearVec _ 1) = []
 _emptiesFromMust pp (LinearVec d c) = fromJust $ emptiesFrom pp (fromJust (tailInvolRank (LinearVec d c)) (rank pp))
 _addMaybe :: (LinearDirection a) => Maybe Pos -> LinearVec a -> Maybe Pos
 _addMaybe p m = do { jp <- p;
@@ -400,10 +362,10 @@ mkveccFromLinearvecc (MkLinearVecC a) = MkVecC a
 -- newtype UnitRankInvolMove = UnitRankwiseMove | UnitDiagonalMove
 --                           deriving (Eq, Ord, Read, Show, UnitLinearMove, RankInvolMove)
 headLinear :: (LinearDirection a) => LinearVec a -> LinearVec a --UnitLinearVec
-headLinear (LinearVec d _) = LinearVec d Once
+headLinear (LinearVec d _) = LinearVec d 1
 tailFilewise :: LinearVec FilewiseDirection -> Maybe (LinearVec FilewiseDirection)
-tailFilewise (LinearVec _ Once) = Nothing
-tailFilewise (LinearVec d (OnceMore c)) = Just (LinearVec d c)
+tailFilewise (LinearVec _ 1) = Nothing
+tailFilewise (LinearVec d c) = Just (LinearVec d (c-1))
 -- units :: LinearMove -> Either (Rank -> [UnitRankInvolMove]) [UnitLinearMove]
 cons :: a -> ([a] -> [a])
 cons a as = a:as
@@ -440,26 +402,27 @@ fromToRanks (a,b) = case compare a b of
   co -> Just $ let { d = case co of LT -> Inwards; GT -> Outwards } in
                  case do { row <- rankOnceWards d a;
                            curry fromToRanks row b;} of
-                   Nothing -> LinearVec d Once
-                   Just (LinearVec d om) -> LinearVec d (OnceMore om)
+                   Nothing -> LinearVec d 1
+                   Just (LinearVec d om) -> LinearVec d (om+1)
 fromToRankwise :: Pos -> Pos -> [LinearVec RankwiseDirection]
 fromToRankwise (a, b) (c, d)
   | b == d = maybeToList (fromToRanks (a,c))
   | opposite b == d = maybeToList $ do { t <- (case a of
-                                                MostInner -> Just $ LinearVec Inwards Once
-                                                a -> fromToRanks (a,MostInner));
-                                         o <- fromToRanks (MostInner,c);
-                                         return $ LinearVec Inwards (addCount (count t) (count o)) }
+                                                5 -> Just $ LinearVec Inwards 1
+                                                a -> fromToRanks (a,5));
+                                         o <- fromToRanks (5,c);
+                                         return $ LinearVec Inwards ((count t) + (count o)) }
   | otherwise = []
-fromToFilesWards :: FilewiseDirection -> File -> File -> Maybe Count
-fromToFilesWards w a b | a==b = Nothing
+{-@ fromToFilesWards :: FilewiseDirection -> File -> File -> NNegInt @-}
+fromToFilesWards :: FilewiseDirection -> File -> File -> Int
+fromToFilesWards w a b | a==b = 0
   | otherwise = let wf = filewiseInc w in
   let c = wf a in
-    if c==b then Just Once
-    else OnceMore <$> fromToFilesWards w c b
+    if c==b then 1
+    else (fromToFilesWards w c b) + 1
 fromToFiles :: (File, File) -> Maybe (LinearVec FilewiseDirection, LinearVec FilewiseDirection)
-fromToFiles (a,b) = do { p <- fromToFilesWards Pluswards a b;
-                         m <- fromToFilesWards Minuswards a b;
+fromToFiles (a,b) = do { p <- maybePosInt $ fromToFilesWards Pluswards a b;
+                         m <- maybePosInt $ fromToFilesWards Minuswards a b;
                          return $ let { pv = LinearVec Pluswards p;
                                         mv = LinearVec Minuswards m } in
                                     if m<p then (mv,pv) else (pv,mv) }
@@ -483,14 +446,6 @@ bothMaybe :: (Maybe a, Maybe a) -> Maybe (a, a)
 bothMaybe (m, n) = do { m <- m; n <- n; return (m,n); }
 mapHomoTuple2 :: (a -> b) -> (a, a) -> (b, b)
 mapHomoTuple2 f (a,b) = (f a, f b)
-sumCountPair :: (Count, Count) -> Count
-sumCountPair = uncurry addCount
-addMaybeCount :: Maybe Count -> Maybe Count -> Maybe Count
-addMaybeCount Nothing a = a
-addMaybeCount a Nothing = a
-addMaybeCount (Just a) (Just b) = Just $ addCount a b
-sumMaybeCountPair :: (Maybe Count, Maybe Count) -> Maybe Count
-sumMaybeCountPair = uncurry addMaybeCount
 filewiseToShortDiagonal :: LinearVec FilewiseDirection -> RankwiseDirection -> LinearVec DiagonalDirection
 filewiseToShortDiagonal (LinearVec f c) r = LinearVec (DiagonalDirection r f) c
 maybeIf :: (a -> Bool) -> Maybe a -> Maybe a
@@ -507,28 +462,34 @@ fromToShortDiagonal a b = do
       (fromToRanks (rank a, rank b)))
 filewiseToLongDiagonal :: LinearVec FilewiseDirection -> LinearVec DiagonalDirection
 filewiseToLongDiagonal (LinearVec f fileCount) =
-  LinearVec (DiagonalDirection Inwards (rever f)) (positiveSubstractCount (fromJust $ countFromPositiveInteger (5+5+1)) fileCount)
-fileDistance :: (File,File) -> Maybe Count
-fileDistance = fmap count . fromToFilesShort
-fileCoorDistance :: (Pos,Pos) -> Maybe Count
+  LinearVec (DiagonalDirection Inwards (rever f)) (5+5+1-fileCount)
+{-@ fileDistance :: (File,File) -> NNegInt @-}
+fileDistance :: (File,File) -> Int
+fileDistance = maybe 0 count . fromToFilesShort
+{-@ fileCoorDistance :: (Pos,Pos) -> NNegInt @-}
+fileCoorDistance :: (Pos,Pos) -> Int
 fileCoorDistance = fileDistance . mapHomoTuple2 file
 fromToCoorFilesShort :: (Pos,Pos) -> Maybe (LinearVec FilewiseDirection)
 fromToCoorFilesShort = fromToFilesShort . mapHomoTuple2 file
 fromToCoorRanks :: (Pos,Pos) -> Maybe (LinearVec RankwiseDirection)
 fromToCoorRanks = fromToRanks. mapHomoTuple2 rank
-rankDistance :: (Rank, Rank) -> Maybe Count
-rankDistance = fmap count . fromToRanks
-rankDistanceFromMostOuter :: Rank -> Maybe Count
-rankDistanceFromMostOuter = fmap count . curry fromToRanks MostOuter
-sumOfRankDistancesFromMostOuter :: (Rank, Rank) -> Maybe Count
+{-@ rankDistance :: (Rank, Rank) -> NNegInt @-}
+rankDistance :: (Rank, Rank) -> Int
+rankDistance = maybe 0 count . fromToRanks
+{-@ rankDistanceFromMostOuter :: Rank -> NNegInt @-}
+rankDistanceFromMostOuter :: Rank -> Int
+rankDistanceFromMostOuter = maybe 0 count . curry fromToRanks 0
+{-@ sumOfRankDistancesFromMostOuter :: (Rank, Rank) -> NNegInt @-}
+sumOfRankDistancesFromMostOuter :: (Rank, Rank) -> Int
 sumOfRankDistancesFromMostOuter =
-  sumMaybeCountPair . mapHomoTuple2 rankDistanceFromMostOuter
-sumOfRankCoorDistancesFromMostOuter :: (Pos,Pos) -> Maybe Count
+  (uncurry (+)) . mapHomoTuple2 rankDistanceFromMostOuter
+{-@ sumOfRankCoorDistancesFromMostOuter :: (Pos,Pos) -> NNegInt @-}
+sumOfRankCoorDistancesFromMostOuter :: (Pos,Pos) -> Int
 sumOfRankCoorDistancesFromMostOuter =
-  sumMaybeCountPair . mapHomoTuple2 (rankDistanceFromMostOuter.rank)
+  (uncurry (+)) . mapHomoTuple2 (rankDistanceFromMostOuter.rank)
 isFilewiseDistanceSameAsSumOfRanksDistancesFromMostOuter :: (Pos,Pos) -> Bool
 isFilewiseDistanceSameAsSumOfRanksDistancesFromMostOuter x =
-  maybe False (uncurry (==)) $ bothMaybe (fileCoorDistance x, sumOfRankCoorDistancesFromMostOuter x)
+  (fileCoorDistance x) == (sumOfRankCoorDistancesFromMostOuter x)
 fromToLongDiagonal :: Pos -> Pos -> Maybe (LinearVec DiagonalDirection)
 -- fromToLongDiagonal a b = do
 --   fileDiff <- fromToFilesShort (file a) (file b)

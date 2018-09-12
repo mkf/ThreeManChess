@@ -7,6 +7,7 @@ import ThreeManChess.Engine.Pos
 import ThreeManChess.Engine.PosIterator
 import ThreeManChess.Engine.Color
 
+{-@ type Board a = Pos -> Maybe a @-}
 type Board a = Pos -> Maybe a
 newtype BoardWrap a = BoardWrap (Board a)
 
@@ -43,36 +44,69 @@ isEmpty f p = case f p of
   Just _ -> False
   Nothing -> True
 
+{-@ type ARank a = File -> Maybe a @-}
 type ARank a = File -> Maybe a
+{-@ type AFile a = Rank -> Maybe a @-}
 type AFile a = Rank -> Maybe a
 type TwoOf a = (a,a)
+{-@ type ListOfTwo a = {v:[a] | len v == 2} @-}
+{-@ type ListOfFour a = {v:[a] | len v == 4} @-}
+{-@ type ListOfEight a = {v:[a] | len v == 8} @-}
+{-@ _listToTwoOf :: ListOfTwo a -> TwoOf a @-}
 _listToTwoOf :: [a] -> TwoOf a
 _listToTwoOf [a,b] = (a,b)
 _listToTwoOf _ = undefined
+{-@ type ATwoOf a = SegmentHalf -> a @-}
 type ATwoOf a = SegmentHalf ->  a
+{-@ _ofTwoOf :: TwoOf a -> ATwoOf a @-}
 _ofTwoOf :: TwoOf a -> ATwoOf a
-_ofTwoOf x FirstHalf = fst x
-_ofTwoOf x SecondHalf = snd x
+_ofTwoOf x 0 = fst x
+_ofTwoOf x 1 = snd x
+{-@ type FourOf a = TwoOf (TwoOf a) @-}
 type FourOf a = TwoOf (TwoOf a)
+{-@ _listToFourOf :: ListOfFour a -> FourOf a @-}
 _listToFourOf :: [a] -> FourOf a
 _listToFourOf [a,b,c,d] = ((a,b),(c,d))
 _listToFourOf _ = undefined
+{-@ _ourMapTwo :: (a -> b) -> TwoOf a -> TwoOf b @-}
+_ourMapTwo :: (a -> b) -> TwoOf a -> TwoOf b
+_ourMapTwo f (a,b) = (f a, f b)
+{-@ _ourMapFour :: (a -> b) -> FourOf a -> FourOf b @-}
+_ourMapFour :: (a -> b) -> FourOf a -> FourOf b
+_ourMapFour f = _ourMapTwo (_ourMapTwo f)
+{-@ _ourMapEight :: (a -> b) -> EightOf a -> EightOf b @-}
+_ourMapEight :: (a -> b) -> EightOf a -> EightOf b
+_ourMapEight f = _ourMapTwo (_ourMapFour f)
+-- {-@ _ourAnnotatedFmapListToTwoOf :: ListOfTwo (ListOfTwo a) -> ListOfTwo (TwoOf a) @-}
+-- _ourAnnotatedFmapListToTwoOf = fmap _listToTwoOf
+-- _ourAnnotatedFmapListToTwoOf [a,b] = [_listToTwoOf a, _listToTwoOf b]
+{-@ _nestedListToFourOf :: ListOfTwo (ListOfTwo a) -> FourOf a @-}
 _nestedListToFourOf :: [[a]] -> FourOf a
-_nestedListToFourOf = _listToTwoOf . fmap _listToTwoOf
+--_nestedListToFourOf = _listToTwoOf . _ourAnnotatedFmapListToTwoOf
+_nestedListToFourOf = (_ourMapTwo _listToTwoOf) . _listToTwoOf
+{-@ type AFourOf a = SegmentQuarter -> a @-}
 type AFourOf a = SegmentQuarter -> a
+{-@ _ofFourOf :: FourOf a -> AFourOf a @-}
 _ofFourOf :: FourOf a -> AFourOf a
-_ofFourOf x (SegmentQuarter a b) = _ofTwoOf (_ofTwoOf x a) b
+_ofFourOf x n = _ofTwoOf (_ofTwoOf x (quot n 2)) (mod n 2)
+{-@ type EightOf a = TwoOf (FourOf a) @-}
 type EightOf a = TwoOf (FourOf a)
+{-@ _listToEightOf :: ListOfEight a -> EightOf a @-}
 _listToEightOf :: [a] -> EightOf a
 _listToEightOf [a,b,c,d,e,f,g,h] = (((a,b),(c,d)),((e,f),(g,h)))
-_listToEightOf _ = undefined
+{-@ _nestedListToEightOf :: ListOfTwo (ListOfTwo (ListOfTwo a)) -> EightOf a @-}
 _nestedListToEightOf :: [[[a]]] -> EightOf a
-_nestedListToEightOf =  _listToTwoOf . fmap _nestedListToFourOf
+-- _nestedListToEightOf =  _listToTwoOf . fmap _nestedListToFourOf
+_nestedListToEightOf = (_ourMapTwo _nestedListToFourOf) . _listToTwoOf
+{-@ _nestedOnceListToEightOf :: ListOfTwo (ListOfFour a) -> EightOf a @-}
 _nestedOnceListToEightOf :: [[a]] -> EightOf a
-_nestedOnceListToEightOf = _listToTwoOf . fmap _listToFourOf
+-- _nestedOnceListToEightOf = _listToTwoOf . fmap _listToFourOf
+_nestedOnceListToEightOf = (_ourMapTwo _listToFourOf) . _listToTwoOf
+{-@ type AEightOf a = SegmentEight -> a @-}
 type AEightOf a = SegmentEight -> a
-_ofEightOf :: EightOf a -> SegmentEight -> a
-_ofEightOf x (SegmentEight q b) = _ofTwoOf (_ofFourOf x q) b
+{-@ _ofEightOf :: EightOf a -> AEightOf a @-}
+_ofEightOf :: EightOf a -> AEightOf a
+_ofEightOf x n = _ofTwoOf (_ofFourOf x (quot n 2)) (mod n 2)
 type RankT a = (EightOf (Maybe a), EightOf (Maybe a), EightOf (Maybe a))
 -- _listToRankT :: [a] -> RankT a
 -- _listToARankHelper :: [Maybe a] -> Maybe Count -> ARank a
@@ -100,16 +134,20 @@ _ofRankTColorSegm :: RankT a -> Color -> EightOf (Maybe a)
 _ofRankTColorSegm (x,_,_) White = x
 _ofRankTColorSegm (_,x,_) Gray = x
 _ofRankTColorSegm (_,_,x) Black = x
+{-@_ofRankT :: RankT a -> ARank a @-}
 _ofRankT :: RankT a -> ARank a
-_ofRankT x (File c e) = _ofEightOf (_ofRankTColorSegm x c) e
+_ofRankT x n = _ofEightOf (_ofRankTColorSegm x (segmColor n)) (segmFile n)
+{-@ type BoardT a = (RankT a, RankT a, RankT a, RankT a, RankT a, RankT a) @-}
 type BoardT a = (RankT a, RankT a, RankT a, RankT a, RankT a, RankT a)
+{-@ _ofBoardTRankT :: BoardT a -> Rank -> RankT a @-}
 _ofBoardTRankT :: BoardT a -> Rank -> RankT a
-_ofBoardTRankT (x,_,_,_,_,_) MostOuter = x
-_ofBoardTRankT (_,x,_,_,_,_) SecondOuter = x
-_ofBoardTRankT (_,_,x,_,_,_) MiddleOuter = x
-_ofBoardTRankT (_,_,_,x,_,_) MiddleInner = x
-_ofBoardTRankT (_,_,_,_,x,_) SecondInner = x
-_ofBoardTRankT (_,_,_,_,_,x) MostInner = x
+_ofBoardTRankT (x,_,_,_,_,_) 0 = x
+_ofBoardTRankT (_,x,_,_,_,_) 1 = x
+_ofBoardTRankT (_,_,x,_,_,_) 2 = x
+_ofBoardTRankT (_,_,_,x,_,_) 3 = x
+_ofBoardTRankT (_,_,_,_,x,_) 4 = x
+_ofBoardTRankT (_,_,_,_,_,x) 5 = x
+{-@ _ofBoardT :: BoardT a -> Board a @-}
 _ofBoardT :: BoardT a -> Board a
 _ofBoardT x (r, f) = _ofRankT (_ofBoardTRankT x r) f
 
