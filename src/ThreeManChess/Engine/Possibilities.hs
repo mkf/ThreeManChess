@@ -239,9 +239,10 @@ instance Vec PawnJumpByTwo where
   add _ PawnJumpByTwo = Nothing
   emptiesFrom from PawnJumpByTwo = do { e <- enPassantFieldPos from; t <- add from PawnJumpByTwo; Just [e, t] }
 -- data (LinearDirection a) => LinearVec a = LinearVec a Count --deriving (Ord)
-{-@ data LinearVec a = LinearVec (forall a. x:LinearDirection a) PosInt @-}
-data LinearVec a where
-  LinearVec :: LinearDirection a => a -> Int -> LinearVec a
+{-@ type LinearVec a = LinearDirection a => (a, PosInt) @-}
+type LinearVec a = LinearDirection a => (a, Int)
+-- data LinearVec a where
+--  LinearVec :: LinearDirection a => a -> Int -> LinearVec a
 data LinearVecC = forall a . LinearDirection a => MkLinearVecC (LinearVec a)
 -- data LinearVecC where
 --   MkLinearVecC :: LinearDirection a => a -> LinearVecC (LinearVec a)
