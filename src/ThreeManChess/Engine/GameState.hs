@@ -15,15 +15,17 @@ import ThreeManChess.Engine.Pos
 showBoard :: (Show a) => Board a -> String
 showBoard a = show $ BoardWrap a
 
+{-@ data GameState = GameState {board :: GameBoard, moatsState :: MoatsState, movesNext :: Color, castlingPossibilities :: CastlingPossibilities,
+                            enPassantStore :: EnPassantStore, halfMoveClock :: NNegInt, fullMoveCounter :: NNegInt, playersAlive :: PlayersAlive } @-}
 data GameState = GameState {board :: GameBoard, moatsState :: MoatsState, movesNext :: Color, castlingPossibilities :: CastlingPossibilities,
-                            enPassantStore :: EnPassantStore, halfMoveClock :: Maybe Count, fullMoveCounter :: Maybe Count, playersAlive :: PlayersAlive }
+                            enPassantStore :: EnPassantStore, halfMoveClock :: Int, fullMoveCounter :: Int, playersAlive :: PlayersAlive }
 instance Show GameState where
   show GameState{board=b, moatsState=ms, movesNext=mn, castlingPossibilities=cp, enPassantStore=eps, halfMoveClock=hmc, fullMoveCounter=fmc, playersAlive=pa} =
     showBoard b ++ show ms ++ show mn ++ show cp ++ show eps ++ show hmc ++ show fmc ++ show pa
 
 newGame :: GameState
 newGame = GameState { board = startBoard, moatsState = noBridges, movesNext = White, castlingPossibilities = allCastling,
-                      enPassantStore = (Nothing, Nothing), halfMoveClock = Nothing, fullMoveCounter = Nothing, playersAlive = allAlive }
+                      enPassantStore = (Nothing, Nothing), halfMoveClock = 0, fullMoveCounter = 0, playersAlive = allAlive }
 
 -- data HypoCheckState = HypoCheckState {board :: GameBoard, enPassantStoreLast :: Maybe Pos, playersAlive :: PlayersAlive}
 type HypoCheckState = (GameBoard, Maybe Pos, PlayersAlive)
