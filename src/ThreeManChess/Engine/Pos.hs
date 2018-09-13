@@ -23,6 +23,9 @@ segmColor f = colorSegm $ quot f 8
 {-@ segmFile :: File -> SegmentEight @-}
 segmFile :: File -> SegmentEight
 segmFile f = mod f 8
+{-@ colorSegmFile :: File -> SegmentEight @-}
+colorSegmFile :: File -> SegmentEight
+colorSegmFile = segmFile
 {-@ fileToColorAndSegmFile :: File -> (ColorSegment, SegmentEight) @-}
 fileToColorAndSegmFile :: File -> (ColorSegment, SegmentEight)
 fileToColorAndSegmFile f = (segmColor f, segmFile f)

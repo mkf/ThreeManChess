@@ -42,18 +42,18 @@ type family Move (f :: FigType) where
 
 vectorFromMoveT :: MoveT -> VecEBC
 vectorFromMoveT (MkQueenMove x) = MkLinearVecEBC x
-vectorFromMoveT (MkKingMove (Alone (MkDiagonalDirecEBC x))) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec x Once
-vectorFromMoveT (MkKingMove (Alone (MkStraightDirecEBC (MkRankwiseDirecEBC x)))) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec x Once
-vectorFromMoveT (MkKingMove (Alone (MkStraightDirecEBC (MkFilewiseDirecEBC x)))) = MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec x Once
+vectorFromMoveT (MkKingMove (Alone (MkDiagonalDirecEBC x))) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (x, 1)
+vectorFromMoveT (MkKingMove (Alone (MkStraightDirecEBC (MkRankwiseDirecEBC x)))) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec (x, 1)
+vectorFromMoveT (MkKingMove (Alone (MkStraightDirecEBC (MkFilewiseDirecEBC x)))) = MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec (x, 1)
 vectorFromMoveT (MkKingMove (NotAlone x)) = MkCastlingVecEBC x
 vectorFromMoveT (MkRookMove x) = MkLinearVecEBC $ MkStraightVecEBC x
 vectorFromMoveT (MkBishopMove x) = MkLinearVecEBC $ MkDiagonalVecEBC x
 vectorFromMoveT (MkKnightMove x) = MkKnightVecEBC x
-vectorFromMoveT (MkInwardPawnMove (Walk Forward)) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Inwards Once
-vectorFromMoveT (MkInwardPawnMove (Walk (Capturing x))) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards x) Once
+vectorFromMoveT (MkInwardPawnMove (Walk Forward)) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec (Inwards, 1)
+vectorFromMoveT (MkInwardPawnMove (Walk (Capturing x))) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards x, 1)
 vectorFromMoveT (MkInwardPawnMove Jump) = MkPawnJumpByTwoVecEBC PawnJumpByTwo
-vectorFromMoveT (MkOutwardPawnMove (Forward,_)) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Outwards Once
-vectorFromMoveT (MkOutwardPawnMove (Capturing x,_)) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards x) Once
+vectorFromMoveT (MkOutwardPawnMove (Forward,_)) = MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec (Outwards, 1)
+vectorFromMoveT (MkOutwardPawnMove (Capturing x,_)) = MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards x, 1)
 vectorFromPossiblyPromotedMoveTNoEither :: (Maybe Promotion -> MoveT) -> VecEBC
 vectorFromPossiblyPromotedMoveTNoEither f = vectorFromMoveT (f Nothing)
 vectorFromPossiblyPromotedMoveT :: Either (Maybe Promotion -> MoveT) MoveT -> VecEBC
@@ -68,35 +68,35 @@ vecsFromToWith :: FigType -> Pos -> Pos -> Color -> [VecEBC]
 vecsFromToWith Queen a b _ = fmap MkLinearVecEBC (fromToLinear a b)
 vecsFromToWith King a b col
   | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) =
-    [MkLinearVecEBC $ MkDiagonalVecEBC $ flip LinearVec Once $ DiagonalDirection Inwards Pluswards]
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards Pluswards, 1)]
   | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) =
-    [MkLinearVecEBC $ MkDiagonalVecEBC $ flip LinearVec Once $ DiagonalDirection Inwards Minuswards]
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards Minuswards, 1)]
   | maybe False (b==) (addOne (DiagonalDirection Outwards Pluswards) a) =
-    [MkLinearVecEBC $ MkDiagonalVecEBC $ flip LinearVec Once $ DiagonalDirection Outwards Pluswards]
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards Pluswards, 1)]
   | maybe False (b==) (addOne (DiagonalDirection Outwards Minuswards) a) =
-    [MkLinearVecEBC $ MkDiagonalVecEBC $ flip LinearVec Once $ DiagonalDirection Outwards Minuswards]
-  | maybe False (b==) (addOne Pluswards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec Pluswards Once]
-  | maybe False (b==) (addOne Minuswards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec Minuswards Once]
-  | maybe False (b==) (addOne Inwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Inwards Once]
-  | maybe False (b==) (addOne Outwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Outwards Once]
-  | a==(MostOuter, File col kfm) && maybe False (b==) (add a QueensideCastling) = [MkCastlingVecEBC QueensideCastling]
-  | a==(MostOuter, File col kfm) && maybe False (b==) (add a KingsideCastling) = [MkCastlingVecEBC KingsideCastling]
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards Minuswards,1)]
+  | maybe False (b==) (addOne Pluswards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec (Pluswards, 1)]
+  | maybe False (b==) (addOne Minuswards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkFilewiseVecEBC $ LinearVec (Minuswards, 1)]
+  | maybe False (b==) (addOne Inwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec (Inwards, 1)]
+  | maybe False (b==) (addOne Outwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec (Outwards, 1)]
+  | (rank a)==0 && (segmFile (file a))==kfm && maybe False (b==) (add a QueensideCastling) = [MkCastlingVecEBC QueensideCastling]
+  | (rank a)==0 && (segmFile (file a))==kfm && maybe False (b==) (add a KingsideCastling) = [MkCastlingVecEBC KingsideCastling]
   | otherwise = []
 vecsFromToWith Rook a b _ = fmap (MkLinearVecEBC . MkStraightVecEBC) (fromToStraight a b)
 vecsFromToWith Bishop a b _ = MkLinearVecEBC . MkDiagonalVecEBC <$> fromToDiagonal a b
 vecsFromToWith Knight a b _ = MkKnightVecEBC <$> fromToKnight a b
 vecsFromToWith InwardPawn a b col
-  | maybe False (b==) (addOne Inwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Inwards Once]
-  | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) = [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards Pluswards) Once]
-  | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) = [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards Minuswards) Once]
-  | rank a ==SecondOuter && segmColor (file a) == col = [MkPawnJumpByTwoVecEBC PawnJumpByTwo]
+  | maybe False (b==) (addOne Inwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec (Inwards, 1)]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Pluswards) a) = [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards Pluswards, 1)]
+  | maybe False (b==) (addOne (DiagonalDirection Inwards Minuswards) a) = [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Inwards Minuswards, 1)]
+  | rank a ==1 && segmColor (file a) == col = [MkPawnJumpByTwoVecEBC PawnJumpByTwo]
   | otherwise = []
 vecsFromToWith OutwardPawn a b _
-  | maybe False (b==) (addOne Outwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec Outwards Once]
+  | maybe False (b==) (addOne Outwards a) = [MkLinearVecEBC $ MkStraightVecEBC $ MkRankwiseVecEBC $ LinearVec (Outwards, 1)]
   | maybe False (b==) (addOne (DiagonalDirection Outwards Pluswards) a) =
-    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards Pluswards) Once]
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards Pluswards, 1)]
   | maybe False (b==) (addOne (DiagonalDirection Outwards Minuswards) a) =
-    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards Minuswards) Once]
+    [MkLinearVecEBC $ MkDiagonalVecEBC $ LinearVec (DiagonalDirection Outwards Minuswards, 1)]
   | otherwise = []
 
 -- moveFromVecWith :: FigType -> VecC -> Either (Maybe Promotion -> MoveT) MoveT
@@ -104,10 +104,10 @@ vecsFromToWith OutwardPawn a b _
 moveFromVecWith :: FigType -> VecEBC -> Maybe (Either (Maybe Promotion -> MoveT) MoveT)
 moveFromVecWith Queen (MkLinearVecEBC x) = Just $ Right $ MkQueenMove x
 moveFromVecWith Queen _ = Nothing
-moveFromVecWith King (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec a Once))) = Just $ Right $ MkKingMove $ Alone $ MkDiagonalDirecEBC a
-moveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec a Once)))) =
+moveFromVecWith King (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (a,1)))) = Just $ Right $ MkKingMove $ Alone $ MkDiagonalDirecEBC a
+moveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec (a,1))))) =
   Just $ Right $ MkKingMove $ Alone $ MkStraightDirecEBC $ MkRankwiseDirecEBC a
-moveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkFilewiseVecEBC (LinearVec a Once)))) =
+moveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkFilewiseVecEBC (LinearVec (a,1))))) =
   Just $ Right $ MkKingMove $ Alone $ MkStraightDirecEBC $ MkFilewiseDirecEBC a
 moveFromVecWith King (MkCastlingVecEBC a) = Just $ Right $ MkKingMove $ NotAlone a
 moveFromVecWith King _ = Nothing
@@ -117,20 +117,20 @@ moveFromVecWith Knight (MkKnightVecEBC a) = Just $ Right $ MkKnightMove a
 moveFromVecWith Knight _ = Nothing
 moveFromVecWith Bishop (MkLinearVecEBC (MkDiagonalVecEBC a)) = Just $ Right $ MkBishopMove a
 moveFromVecWith Bishop _ = Nothing
-moveFromVecWith InwardPawn (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec Inwards Once)))) = Just $ Right $ MkInwardPawnMove $ Walk Forward
-moveFromVecWith InwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Inwards a) Once))) = Just $ Right $ MkInwardPawnMove $ Walk $ Capturing a
+moveFromVecWith InwardPawn (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec (Inwards, 1))))) = Just $ Right $ MkInwardPawnMove $ Walk Forward
+moveFromVecWith InwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Inwards a, 1)))) = Just $ Right $ MkInwardPawnMove $ Walk $ Capturing a
 moveFromVecWith InwardPawn (MkPawnJumpByTwoVecEBC PawnJumpByTwo) = Just $ Right $ MkInwardPawnMove Jump
 moveFromVecWith InwardPawn _ = Nothing
-moveFromVecWith OutwardPawn (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec Outwards Once)))) = Just $ Left (\x -> MkOutwardPawnMove (Forward, x))
-moveFromVecWith OutwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a) Once))) =
+moveFromVecWith OutwardPawn (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec (Outwards, 1))))) = Just $ Left (\x -> MkOutwardPawnMove (Forward, x))
+moveFromVecWith OutwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a, 1)))) =
   Just $ Left (\x -> MkOutwardPawnMove (Capturing a, x))
 moveFromVecWith OutwardPawn _ = Nothing
 hypoMoveFromVecWith :: FigType -> VecEBC -> Maybe HypoCapMoveT
 hypoMoveFromVecWith Queen (MkLinearVecEBC x) = Just $ HypoQueenMove x
 hypoMoveFromVecWith Queen _  = Nothing
-hypoMoveFromVecWith King (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec a Once))) = Just $ HypoKingMove $ MkDiagonalDirecEBC a
-hypoMoveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec a Once)))) = Just $ HypoKingMove $ MkStraightDirecEBC $ MkRankwiseDirecEBC a
-hypoMoveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkFilewiseVecEBC (LinearVec a Once)))) = Just $ HypoKingMove $ MkStraightDirecEBC $ MkFilewiseDirecEBC a
+hypoMoveFromVecWith King (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (a,1)))) = Just $ HypoKingMove $ MkDiagonalDirecEBC a
+hypoMoveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkRankwiseVecEBC (LinearVec (a,1))))) = Just $ HypoKingMove $ MkStraightDirecEBC $ MkRankwiseDirecEBC a
+hypoMoveFromVecWith King (MkLinearVecEBC (MkStraightVecEBC (MkFilewiseVecEBC (LinearVec (a,1))))) = Just $ HypoKingMove $ MkStraightDirecEBC $ MkFilewiseDirecEBC a
 hypoMoveFromVecWith King _ = Nothing
 hypoMoveFromVecWith Rook (MkLinearVecEBC (MkStraightVecEBC a)) = Just $ HypoRookMove a
 hypoMoveFromVecWith Rook _ = Nothing
@@ -138,9 +138,9 @@ hypoMoveFromVecWith Knight (MkKnightVecEBC a) = Just $ HypoKnightMove a
 hypoMoveFromVecWith Knight _ = Nothing
 hypoMoveFromVecWith Bishop (MkLinearVecEBC (MkDiagonalVecEBC a)) = Just $ HypoBishopMove a
 hypoMoveFromVecWith Bishop _ = Nothing
-hypoMoveFromVecWith InwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Inwards a) Once))) = Just $ HypoInwardPawnMove a
+hypoMoveFromVecWith InwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Inwards a, 1)))) = Just $ HypoInwardPawnMove a
 hypoMoveFromVecWith InwardPawn _ = Nothing
-hypoMoveFromVecWith OutwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a) Once))) = Just $ HypoOutwardPawnMove a
+hypoMoveFromVecWith OutwardPawn (MkLinearVecEBC (MkDiagonalVecEBC (LinearVec (DiagonalDirection Outwards a, 1)))) = Just $ HypoOutwardPawnMove a
 hypoMoveFromVecWith OutwardPawn _ = Nothing
 hypoMoveToNormalMove :: HypoCapMoveT -> Either (Maybe Promotion -> MoveT) MoveT
 hypoMoveToNormalMove (HypoQueenMove x) = Right $ MkQueenMove x
@@ -158,7 +158,7 @@ hypoMovesFromToWith :: FigType -> Pos -> Pos -> [HypoCapMoveT]
 hypoMovesFromToWith ft f t = fmap fromJust $ filter isJust $ fmap (hypoMoveFromVecWith ft) (vecsFromToWith ft f t White)
 
 boundMovePromotionHelper :: Pos -> Either (Maybe Promotion -> MoveT) MoveT -> Either (Maybe Promotion -> BoundMoveT) BoundMoveT
-boundMovePromotionHelper (SecondOuter, f) (Left x) = Left (\y -> (x y, (SecondOuter, f)))
+boundMovePromotionHelper (1, f) (Left x) = Left (\y -> (x y, (1, f)))
 boundMovePromotionHelper fr (Left x) = Right (x Nothing, fr)
 boundMovePromotionHelper fr (Right x) = Right (x, fr)
 
@@ -226,7 +226,7 @@ hTo :: BoundHypoCapMoveT -> Maybe Pos
 hTo (m,f) = addEBC f $ vectorFromMoveT $ disregardPromotionPossibOfEither $ hypoMoveToNormalMove m
 -- |Makes sure that BoundVec has promotion just in case of OutwardPawn from SecondOuter or no promotion
 checkIfPromotionPresenceIsOKforOP :: BoundMove 'OutwardPawn -> Bool
-checkIfPromotionPresenceIsOKforOP ((_,Just _),(SecondOuter,_)) = True
+checkIfPromotionPresenceIsOKforOP ((_,Just _),(1,_)) = True
 checkIfPromotionPresenceIsOKforOP ((_,Nothing),_) = True
 checkIfPromotionPresenceIsOKforOP _ = False
 -- |Makes sure that BoundVec has promotion just in case of OutwardPawn from SecondOuter or no promotion
@@ -538,15 +538,15 @@ checkIfWeArePassingAnUnbridgedMoat sm = not.isEmptyList $ filter (Unbridged==) $
 --  - is ('MkInwardPawnMove' ('Walk' ('Capturing' 'Pluswards')),(r ≤ 'MiddleOuter', 'sevenSegmentEight'))
 --  - is ('MkInwardPawnMove' ('Walk' ('Capturing' 'Minuswards')),(r ≤ 'MiddleOuter', 'zeroSegmentEight'))
 checkIfThereIsNoCreekAgainstUs :: BoundMoveT -> Bool
-checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,File _ se))
-  | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
+checkIfThereIsNoCreekAgainstUs (MkInwardPawnMove (Walk (Capturing d)),(r,fse))
+  | r<=2 = not $ d==Pluswards && (segmFile fse)==7 || d==Minuswards && (segmFile fse)==0
   | otherwise = True
 checkIfThereIsNoCreekAgainstUs _ = True
 -- |'hypoWouldBeNoCreak' is just like 'checkIfThereIsNoCreekAgainstUs'
 -- but for ('HypoInwardPawnMove' d,(r ≤ 'MiddleOuter' ,'File' _  'zeroSegmentEight' OR 'sevenSegmentEight'))
 hypoWouldBeNoCreak :: BoundHypoCapMoveT -> Bool
-hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,File _ se))
-  | r<=MiddleOuter = not $ d==Pluswards && se==sevenSegmentEight || d==Minuswards && se==zeroSegmentEight
+hypoWouldBeNoCreak (HypoInwardPawnMove d,(r,fse))
+  | r<=2 = not $ d==Pluswards && (segmFile fse)==7 || d==Minuswards && (segmFile fse)==0
   | otherwise = True
 hypoWouldBeNoCreak _ = True
 
@@ -681,17 +681,18 @@ checkForCheckInitiatedThruMoat sm = ((not.isEmptyList $ moatsM $ move sm)&&) <$>
   Just $ uncurry (||) $ let f = fromMaybe False . checkThreatToColorKing sm in (f $ prev wCo, f $ next wCo)
 nextPlayer :: PlayersAlive -> Color -> Color
 nextPlayer pa c = if isAlive pa (next c) then next c else prev c
-afterHalfMoveClock :: StateMove -> Maybe (Maybe Count)
+{-@ afterHalfMoveClock :: StateMove -> Maybe NNegInt @-}
+afterHalfMoveClock :: StateMove -> Maybe Int
 afterHalfMoveClock sm = do
   whaType <- figType <$> (board $ before sm) (snd $ move sm);
   tosm <- to $ move sm;
   Just $ if whaType==InwardPawn || whaType==OutwardPawn ||
-            isJust ((board $ before sm) tosm) then Nothing else addCountMaybe (halfMoveClock $ before sm) $ Just Once
+            isJust ((board $ before sm) tosm) then 0 else ((halfMoveClock $ before sm) + 1)
 afterPlayersAlive :: StateMove -> Maybe PlayersAlive
 afterPlayersAlive sm = Just $ playersAlive $ before sm
-incMaybeCount :: Maybe Count -> Count
-incMaybeCount Nothing = Once
-incMaybeCount (Just a) = OnceMore a
+{-@ incMaybeCount :: NNegInt -> PosInt @-}
+incMaybeCount :: Int -> Int
+incMaybeCount n = n+1
 simpleAfter :: StateMove -> Maybe GameState
 simpleAfter sm = do
   b <- boardSimplyAfter sm;
@@ -699,7 +700,7 @@ simpleAfter sm = do
   paa <- afterPlayersAlive sm;
   hmc <- afterHalfMoveClock sm;
   Just GameState { board=b, moatsState=afterMoatsState sm, movesNext=nextPlayer (playersAlive (before sm)) (movesNext (before sm))
-                 , castlingPossibilities = cp, enPassantStore = afterEnPassantStore sm, fullMoveCounter = Just $ incMaybeCount (fullMoveCounter (before sm))
+                 , castlingPossibilities = cp, enPassantStore = afterEnPassantStore sm, fullMoveCounter = incMaybeCount (fullMoveCounter (before sm))
                  , halfMoveClock = hmc, playersAlive = paa }
 afterWOblahblah :: StateMove -> Maybe GameState
 afterWOblahblah sm = do
@@ -754,9 +755,9 @@ afterEnPassantStore (StateMove m GameState{enPassantStore=x}) = mappEnP (enPassa
 
 afterColorCastling :: CastlingPossibilitiesForColor -> BoundMoveT -> Color -> CastlingPossibilitiesForColor
 afterColorCastling _ (MkKingMove _, _) _ = noCastlingForColor
-afterColorCastling b (MkRookMove _, (MostOuter, File cof seg)) coi
-  | coi==cof && seg==SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf = casOff QueensideCastling b
-  | coi==cof && seg==SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf = casOff KingsideCastling b
+afterColorCastling b (MkRookMove _, (0, cofseg)) coi
+  | coi==(segmColor cofseg) && (segmFile cofseg)==0 = casOff QueensideCastling b
+  | coi==(segmColor cofseg) && (segmFile cofseg)==7 = casOff KingsideCastling b
   | otherwise = b
 afterColorCastling b _ _ = b
 afterCastling :: CastlingPossibilities -> BoundMoveT -> Color -> Maybe CastlingPossibilities
@@ -764,10 +765,10 @@ afterCastling b mb coi =
   do tomb <- to mb;
      Just $
        let caspo = castlingSetColor b coi $ afterColorCastling (castlingGetColor b coi) mb coi in
-         if rank tomb /= MostOuter then caspo
+         if rank tomb /= 0 then caspo
          else case colorSegmFile (file tomb) of
-                SegmentEight (SegmentQuarter SecondHalf SecondHalf) SecondHalf -> casOffC (segmColor (file tomb)) KingsideCastling caspo
-                SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf -> casOffC (segmColor (file tomb)) QueensideCastling caspo
+                7 -> casOffC (segmColor (file tomb)) KingsideCastling caspo
+                0 -> casOffC (segmColor (file tomb)) QueensideCastling caspo
                 a | a==kfm -> castlingSetColor caspo (segmColor (file tomb)) noCastlingForColor
                 _ -> caspo
 
