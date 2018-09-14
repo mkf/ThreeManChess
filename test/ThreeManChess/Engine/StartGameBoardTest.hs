@@ -17,11 +17,11 @@ import ThreeManChess.Engine.GameState
 
 
 smOne :: StateMove
-smOne = StateMove{move=(MkInwardPawnMove (Walk Forward), (SecondOuter, File White (SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf))),
+smOne = StateMove{move=(MkInwardPawnMove (Walk Forward), (1, 0)),
                   before=newGame}
 
 whiteKingTest :: Assertion
-whiteKingTest = [(MostOuter, File White kfm)] @=? whereIsFig (Figure King White) startBoard
+whiteKingTest = [(0, 0+kfm)] @=? whereIsFig (Figure King White) startBoard
 
 figTypeAndColorOKTest :: Assertion
 figTypeAndColorOKTest = True @=? (checkIfFigTypeOK smOne && checkIfFigColorOK smOne)
@@ -30,19 +30,19 @@ firstAfterTest :: Assertion
 firstAfterTest = True @=? isJust (afterWOblahblah smOne)
 
 theAFileA :: SegmentEight
-theAFileA = SegmentEight (SegmentQuarter FirstHalf FirstHalf) FirstHalf
+theAFileA = 0
 
 justRight :: Either a b -> b
 justRight (Right a) = a
 justRight _ = error "yo"
 
 a2a3Test :: Assertion
-a2a3Test = [(MkInwardPawnMove (Walk Forward), (SecondOuter, File White theAFileA))] @=?
+a2a3Test = [(MkInwardPawnMove (Walk Forward), (1, 0+theAFileA))] @=?
            justRight <$>
            boundMovesFromToWith
            InwardPawn
-           (SecondOuter, File White theAFileA)
-           (MiddleOuter, File White theAFileA)
+           (1, 0+theAFileA)
+           (2, 0+theAFileA)
            White
 
 noZeroDiagonalMoves :: Assertion
