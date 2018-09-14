@@ -39,7 +39,14 @@ packages:
 - .
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: [ liquidhaskell-0.8.2.4 , located-base-0.1.1.1 , liquid-fixpoint-0.7.0.7 , dotgen-0.4.2 , fgl-visualize-0.1.0.1, HUnit-1.6.0.0, test-framework-0.8.2.0, test-framework-hunit-0.3.0.2 ]
+extra-deps: [ liquidhaskell-0.8.2.4 , located-base-0.1.1.1 , 
+liquid-fixpoint-0.7.0.7 , dotgen-0.4.2 , fgl-visualize-0.1.0.1, 
+HUnit-1.6.0.0, test-framework-0.8.2.0, test-framework-hunit-0.3.0.2,
+ansi-terminal-0.8.1, ansi-wl-pprint-0.6.8.2, call-stack-0.1.0, 
+extensible-exceptions-0.1.1.4, hostname-1.0, old-locale-1.0.0.7, 
+random-1.1, regex-posix-0.95.2, xml-1.3.14,
+colour-2.3.4, regex-base-0.93.2, text-1.2.3.0,
+mtl-2.2.2 ]
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
